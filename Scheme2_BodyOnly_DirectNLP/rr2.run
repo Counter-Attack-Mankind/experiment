@@ -1,0 +1,107 @@
+reset;
+
+shell ("if not exist results mkdir results");
+
+# =========================
+# 初始化求解标志
+# =========================
+shell ("if exist results\opti_flag.txt del results\opti_flag.txt");
+
+printf "0" > "results/opti_flag.txt";
+close "results/opti_flag.txt";
+
+# =========================
+# 加载本 Scheme 的模型与初值
+# =========================
+model NLP2.mod;
+include ig.INIVAL;
+
+option solver "../public/solver/ipopt.exe";
+option ipopt_options 'option_file_name=../public/solver/ipopt.opt';
+solve;
+
+# =========================
+# 写求解状态
+# =========================
+shell ("if exist results\opti_flag.txt del results\opti_flag.txt");
+
+if match (solve_message, "Optimal") > 0 then {
+    printf "1" > "results/opti_flag.txt";
+} else {
+    printf "0" > "results/opti_flag.txt";
+};
+
+close "results/opti_flag.txt";
+
+# =========================
+# 删除旧输出
+# =========================
+shell ("if exist results\x.txt del results\x.txt");
+shell ("if exist results\y.txt del results\y.txt");
+shell ("if exist results\theta.txt del results\theta.txt");
+shell ("if exist results\v.txt del results\v.txt");
+shell ("if exist results\a.txt del results\a.txt");
+shell ("if exist results\phy.txt del results\phy.txt");
+shell ("if exist results\w.txt del results\w.txt");
+
+shell ("if exist results\dt.txt del results\dt.txt");
+shell ("if exist results\s.txt del results\s.txt");
+shell ("if exist results\splus.txt del results\splus.txt");
+shell ("if exist results\sminus.txt del results\sminus.txt");
+shell ("if exist results\k.txt del results\k.txt");
+shell ("if exist results\up.txt del results\up.txt");
+shell ("if exist results\down.txt del results\down.txt");
+shell ("if exist results\left.txt del results\left.txt");
+shell ("if exist results\right.txt del results\right.txt");
+
+# =========================
+# 节点变量：1..Nfe
+# =========================
+for {i in 1..Nfe} {
+    printf "%12.8f\n", x[i]      >> "results/x.txt";
+    printf "%12.8f\n", y[i]      >> "results/y.txt";
+    printf "%12.8f\n", theta[i]  >> "results/theta.txt";
+    printf "%12.8f\n", v[i]      >> "results/v.txt";
+    printf "%12.8f\n", a[i]      >> "results/a.txt";
+    printf "%12.8f\n", phy[i]    >> "results/phy.txt";
+    printf "%12.8f\n", w[i]      >> "results/w.txt";
+}
+
+# =========================
+# 区间变量：1..Nfe-1
+# =========================
+for {i in 1..Nfe-1} {
+    printf "%12.8f\n", dt[i]     >> "results/dt.txt";
+    printf "%12.8f\n", s[i]      >> "results/s.txt";
+    printf "%12.8f\n", splus[i]  >> "results/splus.txt";
+    printf "%12.8f\n", sminus[i] >> "results/sminus.txt";
+    printf "%12.8f\n", k[i]      >> "results/k.txt";
+    printf "%12.8f\n", up[i]     >> "results/up.txt";
+    printf "%12.8f\n", down[i]   >> "results/down.txt";
+    printf "%12.8f\n", left[i]   >> "results/left.txt";
+    printf "%12.8f\n", right[i]  >> "results/right.txt";
+}
+
+# =========================
+# 关闭文件
+# =========================
+close "results/x.txt";
+close "results/y.txt";
+close "results/theta.txt";
+close "results/v.txt";
+close "results/a.txt";
+close "results/phy.txt";
+close "results/w.txt";
+
+close "results/dt.txt";
+close "results/s.txt";
+close "results/splus.txt";
+close "results/sminus.txt";
+close "results/k.txt";
+close "results/up.txt";
+close "results/down.txt";
+close "results/left.txt";
+close "results/right.txt";
+
+display sum{i in 1..Nfe-1}(dt[i]);
+display tf;

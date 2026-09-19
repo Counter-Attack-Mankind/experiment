@@ -13,7 +13,7 @@ close "results/opti_flag.txt";
 # =========================
 # 加载本 Scheme 的模型与初值
 # =========================
-model NLP.mod;
+model NLP4.mod;
 include ig.INIVAL;
 
 option solver "../public/solver/ipopt.exe";

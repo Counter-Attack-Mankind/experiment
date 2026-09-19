@@ -5,7 +5,7 @@ global params
 %% ====== 优化结果路径 ======
 current_dir = fileparts(mfilename('fullpath'));   % Utilities
 project_root = fileparts(current_dir);            % 工程根目录
-base_path = fullfile(project_root, 'results');
+base_path = fullfile(project_root, 'Results');
 
 %% ====== 安全检查 ======
 if ~exist(base_path,'dir')
