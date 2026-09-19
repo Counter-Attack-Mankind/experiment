@@ -14,7 +14,7 @@ addpath(fullfile(public_dir, 'Common'));
 addpath(fullfile(public_dir, 'Environment'));
 addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
-
+addpath(fullfile(public_dir, 'hybridAstar'));
 % =========================
 % Scheme1 专用代码
 % =========================

@@ -98,6 +98,6 @@ s.t. eq_DoutsideOBSTACLE {i in 2..Nfe-1, nn in 1..Nobs}:
 (abs((PPP[nn,1,1] - DX[i])*(PPP[nn,2,2] - DY[i]) - (PPP[nn,1,2] - DY[i])*(PPP[nn,2,1] - DX[i])) * 0.5 + abs((PPP[nn,2,1] - DX[i])*(PPP[nn,3,2] - DY[i]) - (PPP[nn,2,2] - DY[i])*(PPP[nn,3,1] - DX[i])) * 0.5 + abs((PPP[nn,3,1] - DX[i])*(PPP[nn,4,2] - DY[i]) - (PPP[nn,3,2] - DY[i])*(PPP[nn,4,1] - DX[i])) * 0.5 + abs((PPP[nn,4,1] - DX[i])*(PPP[nn,1,2] - DY[i]) - (PPP[nn,4,2] - DY[i])*(PPP[nn,1,1] - DX[i])) * 0.5) >= Area[nn];
 
 data;
-param PV := include PV_plan1;
-param PPP := include PPP_plan1;
-param Area := include Area_plan1;
+param PV := include PV_scheme4;
+param PPP := include PPP_scheme4;
+param Area := include Area_scheme4;

@@ -1,4 +1,4 @@
-function flag = LoadPlan1OptimumAndRefine()
+function flag = Scheme4_LoadOptimumAndRefine()
 % Load plan1 optimized variables into params.ef for existing visualization.
 global params
 

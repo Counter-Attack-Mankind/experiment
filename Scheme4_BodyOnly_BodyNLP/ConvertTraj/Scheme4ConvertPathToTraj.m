@@ -1,4 +1,4 @@
-function [x, y, theta, v, a, phy, w, time, target_nfe] = Plan1ConvertPathToTraj()
+function [x, y, theta, v, a, phy, w, time, target_nfe] = Scheme4ConvertPathToTraj()
 % Plan 1 initial trajectory:
 % 1) run the copied configuration filtering only to obtain its final Nfe;
 % 2) resample the original dense Hybrid A* path to that Nfe at equal index

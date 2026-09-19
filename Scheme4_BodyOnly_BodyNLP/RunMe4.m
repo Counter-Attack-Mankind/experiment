@@ -14,7 +14,7 @@ addpath(fullfile(public_dir, 'Common'));
 addpath(fullfile(public_dir, 'Environment'));
 addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
-
+addpath(fullfile(public_dir, 'hybridAstar'));
 % =========================
 % Scheme3 专用代码
 % =========================
@@ -34,7 +34,7 @@ fprintf('===================================\n');
 
 %% ===== 基础初始化 =====
 global params
-task_id = 4;
+task_id = 9;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -43,24 +43,24 @@ LoadTask(task_id);
 %% ==== hybrid A=======
 params.ha.enable_debug_plot = 0;
 params.ha.debug_plot_stride = 50;
-params.ha.strategy_name = 'plan1_body_only_baseline';
+params.ha.strategy_name = 'Scheme4_body_only_baseline';
 params.ha.sweep_scale = 0;
 params.ef.max_dt = 0.25;
 params.ef.config_shrink_scale = 0.9;
 
-fprintf('\n========== plan1: body-only Hybrid A* + Nfe count + body-only NLP ==========\n');
+fprintf('\n========== Scheme4: body-only Hybrid A* + Nfe count + body-only NLP ==========\n');
 success = SearchTrajViaHybridAstar();
 if ~success
-    error('plan1 Hybrid A* failed: %s', params.ha.fail_reason);
+    error('Scheme4 Hybrid A* failed: %s', params.ha.fail_reason);
 end
 
 %% ===== add velocity and choose point =====
-[x, y, theta, v, a, phy, w, time, target_nfe] = Plan1ConvertPathToTraj();
-fprintf('plan1 final Nfe count: %d\n', target_nfe);
+[x, y, theta, v, a, phy, w, time, target_nfe] = Scheme4ConvertPathToTraj();
+fprintf('Scheme4 final Nfe count: %d\n', target_nfe);
 
-WritePlan1InitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
+Scheme4_WriteInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
 VisualizeEmbodimentFilteredTraj(x, y);
-ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'initial');
+Scheme4_ArchiveRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
 tic
@@ -92,11 +92,11 @@ if fid >= 0
     fclose(fid);
 end
 
-ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'all');
+
 
 %% ==== plot ======
-if LoadPlan1OptimumAndRefine()
+if Scheme4_LoadOptimumAndRefine()
     PlotTrueVehicleSweptAreaOnly();
 else
-    fprintf('plan1 optimization failed.\n');
+    fprintf('Scheme4 optimization failed.\n');
 end

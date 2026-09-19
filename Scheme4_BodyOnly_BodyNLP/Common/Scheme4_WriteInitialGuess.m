@@ -1,5 +1,5 @@
-function WritePlan1InitialGuess(x, y, theta, v, a, phy, w, time)
-% Write initial guess for plan1 body-only NLP.
+function Scheme4_WriteInitialGuess(x, y, theta, v, a, phy, w, time)
+% Write initial guess for scheme4 body-only NLP.
 % No embodied-footprint variables are written.
 
 global params
@@ -40,8 +40,8 @@ data.meta = struct('Nfe', Nfe, ...
     'lr', params.vehicle.lr, ...
     'hlb', params.vehicle.hlb, ...
     'obs', params.environment.obs, ...
-    'note', 'plan1 body-only initial guess');
-save('written_initial_guess_data_plan1.mat', 'data');
+    'note', 'scheme4 body-only initial guess');
+save('written_initial_guess_data_scheme4.mat', 'data');
 
 fprintf('\n========== Plan 1 Initial Guess Written ==========\n');
 fprintf('Nfe       : %d\n', Nfe);
@@ -52,12 +52,12 @@ fprintf('==================================================\n\n');
 end
 
 function writeIg(Nfe, x, y, theta, v, a, phy, w, dt, AX, AY, BX, BY, CX, CY, DX, DY)
-if exist('ig_plan1.INIVAL', 'file')
-    delete('ig_plan1.INIVAL');
+if exist('ig_scheme4.INIVAL', 'file')
+    delete('ig_scheme4.INIVAL');
 end
-fid = fopen('ig_plan1.INIVAL', 'w');
+fid = fopen('ig_scheme4.INIVAL', 'w');
 if fid < 0
-    error('Cannot create ig_plan1.INIVAL.');
+    error('Cannot create ig_scheme4.INIVAL.');
 end
 cleanup_obj = onCleanup(@() fclose(fid)); %#ok<NASGU>
 
@@ -86,9 +86,9 @@ end
 
 function writePV(Nfe)
 global params
-fid = fopen('PV_plan1', 'w');
+fid = fopen('PV_scheme4', 'w');
 if fid < 0
-    error('Cannot create PV_plan1.');
+    error('Cannot create PV_scheme4.');
 end
 cleanup_obj = onCleanup(@() fclose(fid)); %#ok<NASGU>
 fprintf(fid, '1  %.12f\r\n', params.task.x0);
@@ -113,9 +113,9 @@ end
 
 function writePPPAndArea()
 global params
-fid = fopen('PPP_plan1', 'w');
+fid = fopen('PPP_scheme4', 'w');
 if fid < 0
-    error('Cannot create PPP_plan1.');
+    error('Cannot create PPP_scheme4.');
 end
 cleanup_obj = onCleanup(@() fclose(fid)); %#ok<NASGU>
 
@@ -130,7 +130,7 @@ for i = 1:params.environment.num_obs
         ox = [ox; ox(end)];
         oy = [oy; oy(end)];
     elseif numel(ox) ~= 4
-        error('Plan1 NLP supports only triangle/quad obstacles. obs %d has %d vertices.', i, numel(ox));
+        error('scheme4 NLP supports only triangle/quad obstacles. obs %d has %d vertices.', i, numel(ox));
     end
     for j = 1:4
         fprintf(fid, '%d %d %d %.12f\r\n', i, j, 1, ox(j));
@@ -139,9 +139,9 @@ for i = 1:params.environment.num_obs
 end
 clear cleanup_obj
 
-fid = fopen('Area_plan1', 'w');
+fid = fopen('Area_scheme4', 'w');
 if fid < 0
-    error('Cannot create Area_plan1.');
+    error('Cannot create Area_scheme4.');
 end
 cleanup_obj = onCleanup(@() fclose(fid)); %#ok<NASGU>
 for i = 1:params.environment.num_obs
