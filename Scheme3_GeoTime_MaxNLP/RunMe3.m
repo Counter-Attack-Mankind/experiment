@@ -80,7 +80,7 @@ params.scheme3.shrink.safety_slack = 1e-7;
 
 %% ==== Initial guess write and check ====
 
-WriteEFInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
+WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time(1:end-1));
 
 scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEFForscheme3('written_initial_guess_data.mat');
 
