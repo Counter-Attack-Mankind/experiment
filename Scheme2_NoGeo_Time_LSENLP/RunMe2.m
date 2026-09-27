@@ -101,9 +101,11 @@ ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'all');
 
 %% == Viusalize ====
 params.visualize.show_ef_boxes = 1;
+flag = LoadEFOptimumAndRefine(scheme_dir, task_id);
 
 if flag
-    VisualizeScheme2Result(task_id, params.visualize.show_ef_boxes);
+    PlotEFBoxesAndTrueSweptArea();
+    PlotTrueVehicleSweptAreaOnly();
 else
     fprintf('Scheme 2 optimization failed.\n');
 end
