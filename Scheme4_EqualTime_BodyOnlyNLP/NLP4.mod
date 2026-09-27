@@ -39,7 +39,7 @@ s.t. define_tf: tf = sum{i in 1..Nfe-1} dt[i];
 s.t. time_bound1{i in 1..Nfe-1}: min_dt <= dt[i] <= max_dt;
 s.t. time_bound2: tf <= 35;
 
-minimize objective_: tf;
+minimize objective_: sum {i in 1..Nfe-1} dt[i]^2;
 
 s.t. DIFF_dxdt{i in 1..Nfe-1}: x[i+1] = x[i] + v[i]*dt[i]*cos(theta[i]);
 s.t. DIFF_dydt{i in 1..Nfe-1}: y[i+1] = y[i] + v[i]*dt[i]*sin(theta[i]);

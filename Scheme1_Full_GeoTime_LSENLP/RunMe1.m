@@ -33,7 +33,7 @@ fprintf('===================================\n');
 
 global params
 
-task_id = 3;
+task_id = 20;
 params.task_id = task_id;
 
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
@@ -80,7 +80,7 @@ params.ef.shrink.safety_slack = 1e-7;
 
 %% ==== Initial guess write and check ====
 
-WriteEFInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
+WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
 
 scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
 
