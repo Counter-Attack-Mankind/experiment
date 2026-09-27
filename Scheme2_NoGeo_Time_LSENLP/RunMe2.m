@@ -15,13 +15,12 @@ addpath(fullfile(public_dir, 'Environment'));
 addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
+addpath(fullfile(public_dir, 'ConvertTraj'));
 % =========================
 % Scheme2 专用代码
 % =========================
 addpath(scheme_dir);
-addpath(fullfile(scheme_dir, 'Common'));
-addpath(fullfile(scheme_dir, 'HybridA'));
-addpath(fullfile(scheme_dir, 'ConvertTraj'));
+
 
 % 所有运行时文件都在 Scheme2 目录生成
 cd(scheme_dir);

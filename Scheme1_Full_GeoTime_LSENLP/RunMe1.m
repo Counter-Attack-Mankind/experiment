@@ -15,13 +15,12 @@ addpath(fullfile(public_dir, 'Environment'));
 addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
+addpath(fullfile(public_dir, 'ConvertTraj'));
 % =========================
 % Scheme1 专用代码
 % =========================
 addpath(scheme_dir);
-addpath(fullfile(scheme_dir, 'Common'));
-addpath(fullfile(scheme_dir, 'HybridA'));
-addpath(fullfile(scheme_dir, 'ConvertTraj'));
+
 
 % 所有运行时文件都在 Scheme1 目录生成
 cd(scheme_dir);
@@ -54,7 +53,6 @@ params.visualize.show_ef_boxes = 1;
 fprintf('\n========== Scheme 1: Body-only Hybrid A* + EF shrink repair + NLP ==========\n');
 
 success = SearchTrajViaHybridAstar();
-
 if ~success
     error('Scheme 1 Hybrid A* failed: %s', params.ha.fail_reason);
 else
@@ -70,13 +68,9 @@ params.ef.config_shrink_scale = 0.9;
 
 VisualizeEmbodimentFilteredTraj(x, y);
 
-scheme1_ef_report = CheckInitialEFCollisionForScheme1( ...
-    x, y, theta, v, phy, time(1:end-1));
+scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1));
 
-save( ...
-    fullfile(run_paths.initial_guess, ...
-    sprintf('scheme1_initial_ef_report_task_%02d.mat', task_id)), ...
-    'scheme1_ef_report');
+save(fullfile(run_paths.initial_guess, sprintf('scheme1_initial_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_report');
 
 %% ==== EF shrink ====
 
@@ -86,17 +80,11 @@ params.ef.shrink.safety_slack = 1e-7;
 
 %% ==== Initial guess write and check ====
 
-WriteEFInitialGuess( ...
-    x, y, theta, v, a, phy, w, time(1:end-1));
+WriteEFInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
 
-scheme1_ef_shrink_report = ...
-    ShrinkWrittenInitialGuessEFForScheme1( ...
-    'written_initial_guess_data.mat');
+scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
 
-save( ...
-    fullfile(run_paths.initial_guess, ...
-    sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), ...
-    'scheme1_ef_shrink_report');
+save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');
 
 report = CheckWrittenInitialGuessForNLP();
 
@@ -139,7 +127,7 @@ ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'all');
 
 %% ==== Success plot ====
 
-flag = LoadScheme1EFOptimumAndRefine(scheme_dir, task_id);
+flag = LoadEFOptimumAndRefine(scheme_dir, task_id);
 
 if flag
     PlotEFBoxesAndTrueSweptArea();

@@ -20,7 +20,7 @@ after_min_slack = inf(Nbox, 1);
 is_repaired = false(Nbox, 1);
 is_unresolved = false(Nbox, 1);
 
-fprintf('\n========== Scheme 1 EF Shrink Initial Guess ==========\n');
+fprintf('\n========== EF Shrink Initial Guess ==========\n');
 fprintf('scale_min                 : %.6f\n', opts.scale_min);
 fprintf('scale_step                : %.6f\n', opts.scale_step);
 fprintf('safety_slack              : %.6e\n', opts.safety_slack);
@@ -100,7 +100,7 @@ opts.scale_step = 0.02;
 opts.safety_slack = 1e-7;
 opts.show_plot = true;
 
-if isfield(params, 'scheme1') && isfield(params.ef, 'shrink')
+if isfield(params.ef, 'shrink')
     user_opts = params.ef.shrink;
     names = fieldnames(opts);
     for k = 1:numel(names)
@@ -122,10 +122,10 @@ obs = D.meta.obs;
 bad_idx = find(shrink_report.after_min_slack < shrink_report.opts.safety_slack & ...
                isfinite(shrink_report.after_min_slack));
 
-figure('Name', 'Scheme 1 Shrink Collision Verification', 'Color', 'w');
+figure('Name', 'Shrink Collision Verification', 'Color', 'w');
 hold on; axis equal; box on; grid on;
 xlabel('x'); ylabel('y');
-title('Scheme 1 shrink result: blue=satisfied, red=violated');
+title('shrink result: blue=satisfied, red=violated');
 
 for ii = 1:numel(obs)
     fill(obs(ii).x(:), obs(ii).y(:), [0.82 0.82 0.82], ...
@@ -164,7 +164,7 @@ hBad = plot(nan, nan, '-', 'Color', [0.85 0.1 0.1], 'LineWidth', 2.0);
 legend([hObs, hPath, hOk, hBad], {'Obstacle', 'Path', 'Satisfied EF box', 'Violated EF box'}, ...
     'Location', 'bestoutside');
 
-figure('Name', 'Scheme 1 Shrink Collision Binary Status', 'Color', 'w');
+figure('Name', 'Shrink Collision Binary Status', 'Color', 'w');
 status = double(shrink_report.after_min_slack >= shrink_report.opts.safety_slack | ...
                 ~isfinite(shrink_report.after_min_slack));
 stairs(status, 'LineWidth', 1.5); grid on;

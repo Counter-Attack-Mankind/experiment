@@ -1,8 +1,4 @@
 function [x, y, theta, v, a, phy, w, time] = RepairInitialGuessEFOnly(x, y, theta, v, a, phy, w, time)
-% RepairInitialGuessEFOnly
-% Scheme 1 local repair: split intervals whose NLP-style EF boxes violate
-% obstacle constraints. Splitting reduces each interval's s = v*dt, so the
-% EF box shrinks through the same equations used by NLP1.mod.
 
 global params
 
@@ -24,13 +20,13 @@ repair_log.min_slack = [];
 repair_log.inserted = [];
 repair_log.bad_idx = {};
 
-fprintf('\n========== Scheme 1 EF Repair ==========\n');
+fprintf('\n========== EF Repair ==========\n');
 fprintf('max_iter                    : %d\n', opts.max_iter);
 fprintf('insert_margin               : %d\n', opts.insert_margin);
 fprintf('max_nfe                     : %d\n', opts.max_nfe);
 
 for iter = 1:opts.max_iter
-    report = CheckInitialEFCollisionForScheme1(x, y, theta, v, phy, dt, false);
+    report = CheckInitialEFCollision(x, y, theta, v, phy, dt, false);
 
     repair_log.iter(end+1,1) = iter;
     repair_log.num_bad(end+1,1) = report.num_bad;
@@ -64,7 +60,7 @@ for iter = 1:opts.max_iter
     repair_log.inserted(end+1,1) = numel(split_idx);
 end
 
-final_report = CheckInitialEFCollisionForScheme1(x, y, theta, v, phy, dt, opts.show_final_plot);
+final_report = CheckInitialEFCollision(x, y, theta, v, phy, dt, opts.show_final_plot);
 fprintf('final repair status: Nfe=%d, bad=%d, min_slack=%.6e\n', ...
     numel(x), final_report.num_bad, final_report.min_slack);
 fprintf('========================================\n\n');
@@ -93,7 +89,7 @@ opts.insert_margin = 1;
 opts.max_nfe = 450;
 opts.show_final_plot = true;
 
-if isfield(params, 'scheme1') && isfield(params.ef, 'repair')
+if isfield(params.ef, 'repair')
     user_opts = params.ef.repair;
     fields = fieldnames(opts);
     for i = 1:numel(fields)

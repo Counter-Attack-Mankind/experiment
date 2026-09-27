@@ -15,13 +15,12 @@ addpath(fullfile(public_dir, 'Environment'));
 addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
+addpath(fullfile(public_dir, 'ConvertTraj'));
 % =========================
 % scheme3 专用代码
 % =========================
 addpath(scheme_dir);
-addpath(fullfile(scheme_dir, 'Common'));
-addpath(fullfile(scheme_dir, 'HybridA'));
-addpath(fullfile(scheme_dir, 'ConvertTraj'));
+
 
 % 所有运行时文件都在 scheme3 目录生成
 cd(scheme_dir);
@@ -69,7 +68,7 @@ params.ef.config_shrink_scale = 0.9;
 
 VisualizeEmbodimentFilteredTraj(x, y);
 
-scheme3_ef_report = CheckInitialEFCollisionForscheme3(x, y, theta, v, phy, time(1:end-1));
+scheme3_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1));
 
 save(fullfile(run_paths.initial_guess, sprintf('scheme3_initial_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_report');
 
@@ -82,7 +81,7 @@ params.ef.shrink.safety_slack = 1e-7;
 
 WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time(1:end-1));
 
-scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEFForscheme3('written_initial_guess_data.mat');
+scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat');
 
 save(fullfile(run_paths.initial_guess, sprintf('scheme3_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_shrink_report');
 
@@ -127,7 +126,7 @@ ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'all');
 
 %% ==== Success plot ====
 
-flag = Loadscheme3EFOptimumAndRefine(scheme_dir, task_id);
+flag = LoadEFOptimumAndRefine(scheme_dir, task_id);
 
 if flag
     PlotEFBoxesAndTrueSweptArea();
