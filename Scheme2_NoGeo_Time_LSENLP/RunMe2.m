@@ -63,7 +63,7 @@ params.ef.config_shrink_scale = 0.9;
 VisualizeEmbodimentFilteredTraj(x, y);
 
 %% == InitalGuess write and check =======
-WriteEFInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
+WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
 report = CheckWrittenInitialGuessForNLP();
 ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'initial');
 

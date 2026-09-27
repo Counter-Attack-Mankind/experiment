@@ -1,4 +1,4 @@
-function WriteEFInitialGuess(x, y, theta, v, a, phy, w, time)
+function WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time)
 global params
 
 Nfe = params.nfe;
@@ -34,6 +34,8 @@ hlb   = params.vehicle.hlb;
 
 a_max = params.vehicle.a_max;
 w_max = params.vehicle.w_max;
+
+alpha = 60;
 
 %========================
 % 只对区间变量分配 Nfe-1
@@ -98,9 +100,12 @@ kappa = tan(phy(1:Nfe-1)) / lw;
 % 区间量：1..Nfe-1
 %========================
 for ii = 1:(Nfe-1)
-    s(ii)      = v(ii) * dt(ii);
-    splus(ii)  = max(s(ii), 0);
-    sminus(ii) = max(-s(ii), 0);
+
+    s(ii) = v(ii) * dt(ii);
+
+    % 与 NLP1/NLP2 中的 softplus 定义一致
+    splus(ii) = (1/alpha) * log(1 + exp(alpha * s(ii)));
+    sminus(ii) = (1/alpha) * log(1 + exp(alpha * (-s(ii))));
 
     kk = kappa(ii);
     sp = splus(ii);
@@ -109,11 +114,13 @@ for ii = 1:(Nfe-1)
     up(ii)   = sp + hlb * abs(kk) * sp;
     down(ii) = sm + hlb * abs(kk) * sm;
 
-    left(ii) = max(-lr * kk * sp, (LF + 0.5 * sp) * kk * sp) ...
-             + max(-LF * kk * sm, (lr + 0.5 * sm) * kk * sm);
+    % 与 NLP1/NLP2 中 left 的 LSE 定义一致
+    left(ii) = (1/alpha) * log(exp(alpha * (-lr * kk * sp)) + exp(alpha * ((LF + 0.5 * sp) * kk * sp))) ...
+             + (1/alpha) * log(exp(alpha * (-LF * kk * sm)) + exp(alpha * ((lr + 0.5 * sm) * kk * sm)));
 
-    right(ii)= max( lr * kk * sp, -(LF + 0.5 * sp) * kk * sp) ...
-             + max( LF * kk * sm, -(lr + 0.5 * sm) * kk * sm);
+    % 与 NLP1/NLP2 中 right 的 LSE 定义一致
+    right(ii) = (1/alpha) * log(exp(alpha * (lr * kk * sp)) + exp(alpha * (-(LF + 0.5 * sp) * kk * sp))) ...
+              + (1/alpha) * log(exp(alpha * (LF * kk * sm)) + exp(alpha * (-(lr + 0.5 * sm) * kk * sm)));
 end
 
 %========================
