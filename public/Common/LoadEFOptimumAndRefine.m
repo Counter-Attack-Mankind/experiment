@@ -1,6 +1,4 @@
-function flag = LoadScheme1EFOptimumAndRefine(strategy_dir, task_id)
-% Load Scheme 1 optimized variables from its own Results/task_XX folder.
-
+function flag = LoadEFOptimumAndRefine(strategy_dir, task_id)
 global params
 
 base_path = fullfile(strategy_dir, 'Results', sprintf('task_%02d', task_id), 'OptimizedVariables');

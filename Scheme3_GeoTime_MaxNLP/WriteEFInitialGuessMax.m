@@ -1,4 +1,4 @@
-function WriteEFInitialGuess(x, y, theta, v, a, phy, w, time)
+function WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time)
 global params
 
 Nfe = params.nfe;

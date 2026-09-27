@@ -70,8 +70,8 @@ fprintf('final repair status: Nfe=%d, bad=%d, min_slack=%.6e\n', ...
 fprintf('========================================\n\n');
 
 params.nfe = numel(x);
-params.scheme1.repair_log = repair_log;
-params.scheme1.repair_report = final_report;
+params.ef.repair_log = repair_log;
+params.ef.repair_report = final_report;
 
 time = [dt(:); 0];
 
@@ -93,8 +93,8 @@ opts.insert_margin = 1;
 opts.max_nfe = 450;
 opts.show_final_plot = true;
 
-if isfield(params, 'scheme1') && isfield(params.scheme1, 'repair')
-    user_opts = params.scheme1.repair;
+if isfield(params, 'scheme1') && isfield(params.ef, 'repair')
+    user_opts = params.ef.repair;
     fields = fieldnames(opts);
     for i = 1:numel(fields)
         f = fields{i};

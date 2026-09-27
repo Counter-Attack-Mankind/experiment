@@ -1,7 +1,4 @@
-function report = CheckInitialEFCollisionForScheme1(x, y, theta, v, phy, time, show_plot)
-% CheckInitialEFCollisionForScheme1
-% Diagnose whether the Scheme 1 initial guess satisfies the NLP-style
-% embodied-footprint obstacle constraints before writing ig.INIVAL.
+function report = CheckInitialEFCollision(x, y, theta, v, phy, time, show_plot)
 
 global params
 

@@ -74,9 +74,9 @@ scheme3_ef_report = CheckInitialEFCollisionForscheme3(x, y, theta, v, phy, time(
 save(fullfile(run_paths.initial_guess, sprintf('scheme3_initial_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_report');
 
 %% ==== EF shrink ====
-params.scheme3.shrink.scale_min = 0;
-params.scheme3.shrink.scale_step = 0.02;
-params.scheme3.shrink.safety_slack = 1e-7;
+params.ef.shrink.scale_min = 0;
+params.ef.shrink.scale_step = 0.02;
+params.ef.shrink.safety_slack = 1e-7;
 
 %% ==== Initial guess write and check ====
 
@@ -97,8 +97,8 @@ solver_dir = fullfile(public_dir, 'solver');
 ampl_log_file = fullfile(run_paths.root, 'ampl_log.txt');
 
 ampl_exe = fullfile(public_dir, 'solver', 'ampl.exe');   %指出对应的路径
-rr_file = fullfile(scheme_dir, 'rr1.run');   % 检测rr.run与NLP.mod是否存在，并且读取路径
-nlp_file = fullfile(scheme_dir, 'NLP1.mod');
+rr_file = fullfile(scheme_dir, 'rr3.run');   % 检测rr.run与NLP.mod是否存在，并且读取路径
+nlp_file = fullfile(scheme_dir, 'NLP3.mod');
 
 %日志调试
 fprintf('\nRunning Scheme 3 AMPL solver\n');

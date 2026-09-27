@@ -80,9 +80,9 @@ save( ...
 
 %% ==== EF shrink ====
 
-params.scheme1.shrink.scale_min = 0;
-params.scheme1.shrink.scale_step = 0.02;
-params.scheme1.shrink.safety_slack = 1e-7;
+params.ef.shrink.scale_min = 0;
+params.ef.shrink.scale_step = 0.02;
+params.ef.shrink.safety_slack = 1e-7;
 
 %% ==== Initial guess write and check ====
 

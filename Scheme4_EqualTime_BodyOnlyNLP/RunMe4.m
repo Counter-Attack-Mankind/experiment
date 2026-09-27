@@ -16,14 +16,14 @@ addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
 % =========================
-% Scheme3 专用代码
+% Scheme4 专用代码
 % =========================
 addpath(scheme_dir);
 addpath(fullfile(scheme_dir, 'Common'));
 addpath(fullfile(scheme_dir, 'HybridA'));
-addpath(fullfile(scheme_dir, 'ConvertTraj'));
 
-% 所有运行时文件都在 Scheme3 目录生成
+
+% 所有运行时文件都在 Scheme4 目录生成
 cd(scheme_dir);
 
 fprintf('\n===== Active Scheme Functions =====\n');

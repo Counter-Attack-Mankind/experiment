@@ -1,11 +1,4 @@
-function shrink_report = ShrinkWrittenInitialGuessEFForScheme1(matfile)
-% ShrinkWrittenInitialGuessEFForScheme1
-% Scheme 1 initial-value repair for NLP1 obstacle constraints.
-%
-% The upstream trajectory and EF screening may still leave some NLP1
-% triangle-area obstacle constraints infeasible. This function keeps the
-% trajectory unchanged, then synchronously shrinks up/down/left/right and
-% A/B/C/D initial values so all obstacle constraints start from the feasible side.
+function shrink_report = ShrinkWrittenInitialGuessEF(matfile)
 
 global params
 
@@ -86,7 +79,7 @@ shrink_report.min_after_slack = min(after_min_slack);
 shrink_report.all_collision_constraints_satisfied = all(after_min_slack >= opts.safety_slack | ~isfinite(after_min_slack));
 shrink_report.opts = opts;
 
-params.scheme1.shrink_report = shrink_report;
+params.ef.shrink_report = shrink_report;
 
 fprintf('repaired EF boxes          : %d / %d\n', shrink_report.num_repaired, Nbox);
 fprintf('unresolved EF boxes        : %d / %d\n', shrink_report.num_unresolved, Nbox);
@@ -107,8 +100,8 @@ opts.scale_step = 0.02;
 opts.safety_slack = 1e-7;
 opts.show_plot = true;
 
-if isfield(params, 'scheme1') && isfield(params.scheme1, 'shrink')
-    user_opts = params.scheme1.shrink;
+if isfield(params, 'scheme1') && isfield(params.ef, 'shrink')
+    user_opts = params.ef.shrink;
     names = fieldnames(opts);
     for k = 1:numel(names)
         if isfield(user_opts, names{k})
