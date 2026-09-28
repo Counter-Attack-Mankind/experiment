@@ -1,16 +1,17 @@
-function flag = LoadEFOptimumAndRefine(strategy_dir, task_id)
+function flag = LoadEFOptimumAndRefine(strategy_dir)
 global params
 
-base_path = fullfile(strategy_dir, 'runtime', sprintf('task_%02d', task_id), 'OptimizedVariables');
+base_path = fullfile(strategy_dir, 'runtime');
+
 if ~isfolder(base_path)
-    error('Scheme 1 optimized variable folder does not exist: %s', base_path);
+    error('Runtime optimized variable folder does not exist: %s', base_path);
 end
 
 flag_file = fullfile(base_path, 'opti_flag.txt');
 if exist(flag_file, 'file') == 2
     opti_flag = load(flag_file);
 else
-    warning('Scheme 1 opti_flag.txt does not exist: %s', flag_file);
+    warning('opti_flag.txt does not exist: %s', flag_file);
     opti_flag = 0;
 end
 

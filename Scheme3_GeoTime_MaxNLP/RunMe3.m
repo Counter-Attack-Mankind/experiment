@@ -122,11 +122,11 @@ if fid >= 0
     fclose(fid);
 end
 
-ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'all');
+ArchiveStrategyRunFiles(scheme_dir, task_id);
 
 %% ==== Success plot ====
 
-flag = LoadEFOptimumAndRefine(scheme_dir, task_id);
+flag = LoadEFOptimumAndRefine(scheme_dir);
 
 if flag
     PlotEFBoxesAndTrueSweptArea();

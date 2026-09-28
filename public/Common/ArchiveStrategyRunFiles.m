@@ -1,6 +1,6 @@
-function ArchiveStrategyRunFiles(scheme_dir, task_id, report, phase)
+function ArchiveStrategyRunFiles(scheme_dir, task_id, phase)
 
-if nargin < 4
+if nargin < 3
     phase = 'all';
 end
 
@@ -11,26 +11,22 @@ paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 % 归档 Initial Guess
 % ==========================
 
-copyIfExists(fullfile(scheme_dir, 'ig.INIVAL'), ...
-             paths.initial_guess);
+if any(strcmpi(phase, {'all','initial'}))
 
-copyIfExists(fullfile(scheme_dir, 'PV'), ...
-             paths.initial_guess);
+    copyIfExists(fullfile(scheme_dir, 'ig.INIVAL'), ...
+                 paths.initial_guess);
 
-copyIfExists(fullfile(scheme_dir, 'PPP'), ...
-             paths.initial_guess);
+    copyIfExists(fullfile(scheme_dir, 'PV'), ...
+                 paths.initial_guess);
 
-copyIfExists(fullfile(scheme_dir, 'Area'), ...
-             paths.initial_guess);
+    copyIfExists(fullfile(scheme_dir, 'PPP'), ...
+                 paths.initial_guess);
 
-copyIfExists(fullfile(scheme_dir, 'written_initial_guess_data.mat'), ...
-             paths.initial_guess);
+    copyIfExists(fullfile(scheme_dir, 'Area'), ...
+                 paths.initial_guess);
 
-if nargin >= 3 && ~isempty(report)
-    save( ...
-        fullfile(paths.initial_guess, ...
-        sprintf('initial_guess_report_task_%02d.mat', task_id)), ...
-        'report');
+    copyIfExists(fullfile(scheme_dir, 'written_initial_guess_data.mat'), ...
+                 paths.initial_guess);
 end
 
 %% =========================

@@ -56,7 +56,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 1 Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    VisualizeHybridAstarPath();
+    %VisualizeHybridAstarPath();
 end
 
 %% ==== Add velocity and configuration-point selection ====
@@ -68,7 +68,7 @@ params.ef.config_shrink_scale = 0.9;
 
 UpdateNfeConfig(task_id, numel(x));
 
-VisualizeEmbodimentFilteredTraj(x, y);
+%VisualizeEmbodimentFilteredTraj(x, y);
 
 scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1));
 
@@ -84,13 +84,11 @@ params.ef.shrink.safety_slack = 1e-7;
 
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
 
-scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
+%scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
+%save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');
+%report = CheckWrittenInitialGuessForNLP();
 
-save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');
-
-report = CheckWrittenInitialGuessForNLP();
-
-ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'initial');
+ArchiveStrategyRunFiles(scheme_dir, task_id);
 
 %% ==== IPOPT / AMPL ====
 
@@ -125,15 +123,16 @@ if fid >= 0
     fclose(fid);
 end
 
-ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'all');
+ArchiveStrategyRunFiles(scheme_dir, task_id);
 
 %% ==== Success plot ====
 
-flag = LoadEFOptimumAndRefine(scheme_dir, task_id);
+flag = LoadEFOptimumAndRefine(scheme_dir);
 
 if flag
-    PlotEFBoxesAndTrueSweptArea();
-    PlotTrueVehicleSweptAreaOnly();
+    %PlotEFBoxesAndTrueSweptArea();
+    %PlotTrueVehicleSweptAreaOnly();
+    Final_Viusalize_withplot();
 else
     fprintf('Scheme 1 optimization failed.\n');
 end

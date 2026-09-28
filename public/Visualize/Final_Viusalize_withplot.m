@@ -2,7 +2,7 @@ function Final_Viusalize_withplot()
 
 global params
 %% ======== 视频保存开关 ========
-save_video = true;   % true：保存视频 / false：只显示动画
+save_video = false;   % true：保存视频 / false：只显示动画
 video_path = fullfile(pwd, 'results');   % 保存目录（可改）
 video_name = '16.mp4'; % 文件名
 
