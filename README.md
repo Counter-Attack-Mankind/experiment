@@ -22,7 +22,7 @@
 
 ---
 
-## Scheme 4 — Ablation Experiment
+## Scheme 4 — Body-only Baseline
 
 **验证缓冲避障模型**
 

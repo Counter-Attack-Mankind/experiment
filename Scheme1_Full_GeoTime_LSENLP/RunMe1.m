@@ -83,12 +83,12 @@ params.ef.shrink.safety_slack = 1e-7;
 %% ==== Initial guess write and check ====
 
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
+scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
 
-%scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
 %save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');
 %report = CheckWrittenInitialGuessForNLP();
 
-ArchiveStrategyRunFiles(scheme_dir, task_id);
+ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
 
@@ -123,7 +123,7 @@ if fid >= 0
     fclose(fid);
 end
 
-ArchiveStrategyRunFiles(scheme_dir, task_id);
+ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 
 %% ==== Success plot ====
 

@@ -11,6 +11,18 @@ printf "0" > "runtime/opti_flag.txt";
 close "runtime/opti_flag.txt";
 
 # =========================
+# 删除旧输出
+# =========================
+shell ("if exist runtime\x.txt del runtime\x.txt");
+shell ("if exist runtime\y.txt del runtime\y.txt");
+shell ("if exist runtime\theta.txt del runtime\theta.txt");
+shell ("if exist runtime\v.txt del runtime\v.txt");
+shell ("if exist runtime\a.txt del runtime\a.txt");
+shell ("if exist runtime\phy.txt del runtime\phy.txt");
+shell ("if exist runtime\w.txt del runtime\w.txt");
+shell ("if exist runtime\dt.txt del runtime\dt.txt");
+
+# =========================
 # 加载本 Scheme 的模型与初值
 # =========================
 model NLP4.mod;
@@ -33,18 +45,6 @@ if match (solve_message, "Optimal") > 0 then {
 };
 
 close "runtime/opti_flag.txt";
-
-# =========================
-# 删除旧输出
-# =========================
-shell ("if exist runtime\x.txt del runtime\x.txt");
-shell ("if exist runtime\y.txt del runtime\y.txt");
-shell ("if exist runtime\theta.txt del runtime\theta.txt");
-shell ("if exist runtime\v.txt del runtime\v.txt");
-shell ("if exist runtime\a.txt del runtime\a.txt");
-shell ("if exist runtime\phy.txt del runtime\phy.txt");
-shell ("if exist runtime\w.txt del runtime\w.txt");
-shell ("if exist runtime\dt.txt del runtime\dt.txt");
 
 # =========================
 # 节点变量：1..Nfe

@@ -76,13 +76,13 @@ rr_file = fullfile(scheme_dir, 'rr2.run');   % 检测rr.run与NLP.mod是否存�
 nlp_file = fullfile(scheme_dir, 'NLP2.mod');
 
 %日志调试
-fprintf('\nRunning Scheme 1 AMPL solver\n');
+fprintf('\nRunning Scheme 2 AMPL solver\n');
 fprintf('AMPL executable: %s\n', ampl_exe);
 fprintf('AMPL driver    : %s\n', rr_file);
 fprintf('NLP model      : %s\n', nlp_file);
 fprintf('AMPL log file  : %s\n', ampl_log_file);
 
-% 当前工作目录已经是 Scheme1
+% 当前工作目录已经是 Scheme2
 cmd = sprintf('"%s" rr2.run', ampl_exe);
 [ampl_status, ampl_output] = system(cmd);
 
@@ -97,7 +97,7 @@ if fid >= 0
     fclose(fid);
 end
 
-ArchiveStrategyRunFiles(scheme_dir, task_id);
+ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 
 %% == Viusalize ====
 params.visualize.show_ef_boxes = 1;

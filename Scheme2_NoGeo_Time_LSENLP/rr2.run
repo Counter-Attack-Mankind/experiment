@@ -11,6 +11,27 @@ printf "0" > "runtime/opti_flag.txt";
 close "runtime/opti_flag.txt";
 
 # =========================
+# 删除旧输出
+# =========================
+shell ("if exist runtime\x.txt del runtime\x.txt");
+shell ("if exist runtime\y.txt del runtime\y.txt");
+shell ("if exist runtime\theta.txt del runtime\theta.txt");
+shell ("if exist runtime\v.txt del runtime\v.txt");
+shell ("if exist runtime\a.txt del runtime\a.txt");
+shell ("if exist runtime\phy.txt del runtime\phy.txt");
+shell ("if exist runtime\w.txt del runtime\w.txt");
+
+shell ("if exist runtime\dt.txt del runtime\dt.txt");
+shell ("if exist runtime\s.txt del runtime\s.txt");
+shell ("if exist runtime\splus.txt del runtime\splus.txt");
+shell ("if exist runtime\sminus.txt del runtime\sminus.txt");
+shell ("if exist runtime\k.txt del runtime\k.txt");
+shell ("if exist runtime\up.txt del runtime\up.txt");
+shell ("if exist runtime\down.txt del runtime\down.txt");
+shell ("if exist runtime\left.txt del runtime\left.txt");
+shell ("if exist runtime\right.txt del runtime\right.txt");
+
+# =========================
 # 加载本 Scheme 的模型与初值
 # =========================
 model NLP2.mod;
@@ -32,27 +53,6 @@ if match (solve_message, "Optimal") > 0 then {
 };
 
 close "runtime/opti_flag.txt";
-
-# =========================
-# 删除旧输出
-# =========================
-shell ("if exist runtime\x.txt del runtime\x.txt");
-shell ("if exist runtime\y.txt del runtime\y.txt");
-shell ("if exist runtime\theta.txt del runtime\theta.txt");
-shell ("if exist runtime\v.txt del runtime\v.txt");
-shell ("if exist runtime\a.txt del runtime\a.txt");
-shell ("if exist runtime\phy.txt del runtime\phy.txt");
-shell ("if exist runtime\w.txt del runtime\w.txt");
-
-shell ("if exist runtime\dt.txt del runtime\dt.txt");
-shell ("if exist runtime\s.txt del runtime\s.txt");
-shell ("if exist runtime\splus.txt del runtime\splus.txt");
-shell ("if exist runtime\sminus.txt del runtime\sminus.txt");
-shell ("if exist runtime\k.txt del runtime\k.txt");
-shell ("if exist runtime\up.txt del runtime\up.txt");
-shell ("if exist runtime\down.txt del runtime\down.txt");
-shell ("if exist runtime\left.txt del runtime\left.txt");
-shell ("if exist runtime\right.txt del runtime\right.txt");
 
 # =========================
 # 节点变量：1..Nfe

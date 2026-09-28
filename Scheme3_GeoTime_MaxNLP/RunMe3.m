@@ -85,7 +85,7 @@ scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEF('written_initial_guess_da
 
 save(fullfile(run_paths.initial_guess, sprintf('scheme3_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_shrink_report');
 
-report = CheckWrittenInitialGuessForNLP()
+report = CheckWrittenInitialGuessForNLP();
 
 ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'initial');
 
@@ -122,7 +122,7 @@ if fid >= 0
     fclose(fid);
 end
 
-ArchiveStrategyRunFiles(scheme_dir, task_id);
+ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 
 %% ==== Success plot ====
 
