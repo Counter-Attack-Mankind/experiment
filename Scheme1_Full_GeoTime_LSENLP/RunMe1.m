@@ -66,6 +66,8 @@ params.ef.config_shrink_scale = 0.9;
 
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 
+UpdateNfeConfig(task_id, numel(x));
+
 VisualizeEmbodimentFilteredTraj(x, y);
 
 scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1));
