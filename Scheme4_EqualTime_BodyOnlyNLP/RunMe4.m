@@ -54,7 +54,10 @@ if ~success
 end
 
 %% ===== add velocity and choose point =====
-[x, y, theta, v, a, phy, w, time, target_nfe] = Scheme4ConvertPathToTraj();
+
+target_nfe = ReadMatchedNfe(task_id, experiment_root);      %从scheme1中读取Nfe
+
+[x, y, theta, v, a, phy, w, time] = Scheme4ConvertPathToTraj(target_nfe);
 fprintf('Scheme4 final Nfe count: %d\n', target_nfe);
 
 Scheme4_WriteInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
