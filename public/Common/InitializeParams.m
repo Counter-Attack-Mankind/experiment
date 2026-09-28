@@ -39,8 +39,9 @@ params.ha.num_phy_ha = 5;
 params.ha.penalty_on_phy_change = 0.01;  % 惩罚方向盘频繁变动（让路径尽量走直线）
 %-----------------（新增）---------------
 
-params.ha.penalty_on_direction_change = 5; % 换向惩罚
-params.ha.penalty_for_backward = 3;     % 倒车惩罚
+params.ha.penalty_on_direction_change = 8; % 换向惩罚
+params.ha.penalty_for_backward = 0;     % 倒车惩罚
+params.ha.rs_reverse_cost = 1.0;             % RS 中前进/倒车长度等价
 
 params.ha.max_iter        = 20000;
 params.ha.max_openlist    = 50000;

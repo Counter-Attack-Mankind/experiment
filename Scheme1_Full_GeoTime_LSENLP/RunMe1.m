@@ -56,7 +56,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 1 Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    %VisualizeHybridAstarPath();
+    VisualizeHybridAstarPath();
 end
 
 %% ==== Add velocity and configuration-point selection ====
@@ -130,9 +130,9 @@ ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 flag = LoadEFOptimumAndRefine(scheme_dir);
 
 if flag
-    %PlotEFBoxesAndTrueSweptArea();
+    PlotEFBoxesAndTrueSweptArea();
     %PlotTrueVehicleSweptAreaOnly();
-    Final_Viusalize_withplot();
+    %Final_Viusalize_withplot();
 else
     fprintf('Scheme 1 optimization failed.\n');
 end

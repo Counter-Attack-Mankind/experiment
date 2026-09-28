@@ -53,9 +53,8 @@ openlist_ = [init_node.f, index];       % 初始化openlist
 goal_node.x = params.task.xf;
 goal_node.y = params.task.yf;
 goal_node.theta = params.task.thetaf;
-goal_node.v = 0;    % goal 本身不限制到达方向
-
 goal_id = CalculateNodeIndex(goal_node);   % 目标离散索引
+goal_node.v = 0;    % goal 本身不限制到达方向
 
 completeness_flag = 0;         % 是否完成
 complete_via_rs_flag = 0;      % 是否通过RS完成
@@ -162,7 +161,7 @@ while (~isempty(openlist_))
 
                 child_node.is_closed = 0;   % 标记为未闭
                 child_node.is_open = 1;     % 标记为在openlist
-                grid_space_{child_node_id(1), child_node_id(2), child_node_id(3),child_node_id(4)} = child_node; % 保存节点
+                grid_space_{child_node_id(1), child_node_id(2), child_node_id(3)} = child_node; % 保存节点
                 openlist_ = [openlist_; child_node.f, child_node_id];  % 加入openlist
 
                 % ===== Step3 【新增】：命中终点目标格子则结束 =====
@@ -225,14 +224,15 @@ while (~isempty(openlist_))
             else
                 penalty_on_dir_change = double(child_node.v ~= parent_v) * params.ha.penalty_on_direction_change;
             end
-            step_cost = local_dt + penalty_on_phy_change + penalty_on_dir_change + penalty_on_backward;
+
+            step_cost = local_dt + penalty_on_phy_change + penalty_on_dir_change ...+ penalty_on_backward;
 
             % 【更改】candidate_g 候选g，对"已存在节点"的新路径尝试后，加和代价
             child_candidate_g = cur_node.g + step_cost;
 
-            child_previous_g = grid_space_{child_node_id(1), child_node_id(2), child_node_id(3),child_node_id(4)}.g;
+            child_previous_g = grid_space_{child_node_id(1), child_node_id(2), child_node_id(3)}.g;
             if (child_previous_g > child_candidate_g + 0.1)    % 新路径更优
-                child_node.h = grid_space_{child_node_id(1), child_node_id(2), child_node_id(3),child_node_id(4)}.h;
+                child_node.h = grid_space_{child_node_id(1), child_node_id(2), child_node_id(3)}.h;
 
                 % 【新增】更新g值
                 child_node.g = child_candidate_g;
@@ -318,7 +318,7 @@ while (1)
     Traj.local_dt = [dt_seg, Traj.local_dt];
 
     parent_id = cur_node.parent_id;
-    cur_node = grid_space_{parent_id(1), parent_id(2), parent_id(3),parent_id(4)};
+    cur_node = grid_space_{parent_id(1), parent_id(2), parent_id(3)};
 end
 
 x = Traj.x;
@@ -491,7 +491,7 @@ for ii = 2 : length(params.guiding_path.x)
     s(ii) = hypot(params.guiding_path.x(ii) - params.guiding_path.x(ii-1), ...
                   params.guiding_path.y(ii) - params.guiding_path.y(ii-1)) + s(ii-1); % 计算累计弧长
 end
-params.progress_s = s(end) - s;  % 翻转数组，从终点到起点
+params.progress_s = fliplr(s);  % 翻转数组，从终点到起点
 end
 
 %% 启发式函数
@@ -552,23 +552,16 @@ end
 
 %% 从openlist取最小f节点
 function [cur_node, cur_node_id] = ExtractMinFNodeFromOpenlist()
-
 global grid_space_ openlist_
-
 list = openlist_(:, 1);
-
-id = find(list == min(list));
-id = id(end);
-
-% openlist:
-% [f, ix, iy, itheta, idir]
-cur_node_id = openlist_(id, 2:5);
-cur_node = grid_space_{ cur_node_id(1), cur_node_id(2), cur_node_id(3), cur_node_id(4)};
-openlist_(id, :) = [];
-grid_space_{ cur_node_id(1), cur_node_id(2), cur_node_id(3), cur_node_id(4)}.is_closed = 1;
-grid_space_{ cur_node_id(1), cur_node_id(2), cur_node_id(3), cur_node_id(4)}.is_open = 0;
-
+id = find(list == min(list)); id = id(end);  % 取最后一个最小f节点
+cur_node_id = openlist_(id, 2 : 4);           % 节点索引
+cur_node = grid_space_{cur_node_id(1), cur_node_id(2), cur_node_id(3)};
+openlist_(id, :) = [];                         % 从openlist删除
+grid_space_{cur_node_id(1), cur_node_id(2), cur_node_id(3)}.is_closed = 1; % 标记闭
+grid_space_{cur_node_id(1), cur_node_id(2), cur_node_id(3)}.is_open = 0;
 end
+
 
 %% 碰撞检测: 车辆矩形 + 障碍物（SAT）
 function is_valid = IsVehicleBodyValid(x, y, theta, phy, dir, local_dt)
@@ -680,9 +673,8 @@ end
 
 %%
 function UpdateOpenlist(child_node, child_node_id)
-
-% openlist_ 每行：
-% [f, ix, iy, itheta, idir]
+% UpdateOpenlist: 删除openlist中该节点的旧条目，再插入最新f条目
+% openlist_ 每行格式: [f, ix, iy, itheta]
 
 global openlist_
 
@@ -691,18 +683,16 @@ if isempty(openlist_)
     return;
 end
 
-mask = ...
-    (openlist_(:,2) == child_node_id(1)) & ...
-    (openlist_(:,3) == child_node_id(2)) & ...
-    (openlist_(:,4) == child_node_id(3)) & ...
-    (openlist_(:,5) == child_node_id(4));
+% 找到所有匹配该id的行
+mask = (openlist_(:,2) == child_node_id(1)) & ...
+       (openlist_(:,3) == child_node_id(2)) & ...
+       (openlist_(:,4) == child_node_id(3));
 
+% 先删除旧条目（可能有多条）
 openlist_(mask, :) = [];
 
-openlist_ = [ ...
-    openlist_; ...
-    child_node.f, child_node_id];
-
+% 再插入最新条目
+openlist_ = [openlist_; child_node.f, child_node_id];
 end
 
 %% 【新增】
@@ -716,7 +706,7 @@ reedsConnObj = robotics.ReedsSheppConnection('MinTurningRadius', turning_radius_
 % 如果你没有 turning_radius_min，就用 lw/tan(phy_max) 推一个：
 
 % 倒车代价（可选，参考第一版）
-reedsConnObj.ReverseCost = params.ha.rs_reverse_cost;
+reedsConnObj.ReverseCost = params.ha.penalty_for_backward;
 
 [pathSegObj, ~] = connect(reedsConnObj, startPose, goalPose);
 if isempty(pathSegObj) || isempty(pathSegObj{1})
@@ -843,6 +833,6 @@ while 1
     if any(pid < 1)
         break;
     end
-    cur_node = grid_space_{pid(1), pid(2), pid(3),pid(4)};
+    cur_node = grid_space_{pid(1), pid(2), pid(3)};
 end
 end
