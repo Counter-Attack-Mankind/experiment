@@ -87,14 +87,26 @@ shrink_scale = getConfigShrinkScale();
 
 selected = 1;
 interval_time = [];
-
 abox = [];
 bbox = [];
 cbox = [];
 dbox = [];
-
 cur_idx = 1;
 
+% ================================================================
+% 强制保留换向点
+% ================================================================
+if isfield(params.ef, 'dense_change_idx') &&~isempty(params.ef.dense_change_idx)
+    mandatory_idx = params.ef.dense_change_idx(:).';
+    mandatory_idx = mandatory_idx(mandatory_idx > 1 & mandatory_idx < dense_n);
+    mandatory_idx = unique(mandatory_idx, 'stable');
+else
+    mandatory_idx = [];
+end
+
+% 起点、所有 cusp、终点共同构成强制边界
+mandatory_idx = unique([1, mandatory_idx, dense_n], 'stable');
+fprintf('有效尖点数量 : %d\n', max(0, numel(mandatory_idx) - 2));
 
 %% ================================================================
 % Module 5: 基于 EF 可行性的贪心降采样
@@ -114,17 +126,34 @@ while cur_idx < dense_n
 
     remaining_step = dense_n - cur_idx;
 
+    % ============================================================
+    % 当前区间绝不能越过下一个 mandatory point
+    % ============================================================
+    next_mandatory = mandatory_idx(find(mandatory_idx > cur_idx, 1, 'first'));
+
+    if isempty(next_mandatory)
+        next_mandatory = dense_n;
+    end
+
+    step_to_mandatory = next_mandatory - cur_idx;
+
+    % 如果两个强制点本身的时间距离小于 min_dt，
+    % 则无法同时满足"保留 cusp"和 NLP dt 下界。
+    if step_to_mandatory < min_step
+        error(['TimeDistribution: mandatory point is too close. ', 'cur_idx=%d, mandatory_idx=%d, step=%d, min_step=%d.'], cur_idx, next_mandatory, step_to_mandatory, min_step);
+    end
+
     % ------------------------------------------------------------
     % Case 1: 当前点到终点的剩余跨度不超过 max_step
     % ------------------------------------------------------------
     % 若终点已经落在允许的最大时间间隔内，则直接连接到终点。
     % 注意：这里默认终点区间可接受，只估计 EF box，不再做逐步搜索。
-    if remaining_step <= max_step
+    if next_mandatory == dense_n && remaining_step <= max_step
 
         next_idx = dense_n;
 
         [a_temp, b_temp, c_temp, d_temp] = ...
-            estimateIntervalBox(cur_idx, next_idx, base_dt, v, phy);
+            estimateIntervalBox(cur_idx, next_idx, x1, y1, v, phy);
 
         selected(end+1)      = next_idx;
         interval_time(end+1) = (next_idx - cur_idx) * base_dt;
@@ -144,10 +173,11 @@ while cur_idx < dense_n
     % upper_step 初始取 max_step。
     % 若按照 max_step 选点会导致最后剩余区间小于 min_step，
     % 则提前缩短本次 upper_step，给最后一个区间留出至少 min_step。
-    upper_step = max_step;
+    upper_step = min(max_step, step_to_mandatory);
+    remaining_to_boundary = step_to_mandatory - upper_step;
 
-    if remaining_step - upper_step > 0 && remaining_step - upper_step < min_step
-        upper_step = remaining_step - min_step;
+    if remaining_to_boundary > 0 && remaining_to_boundary < min_step
+        upper_step = step_to_mandatory - min_step;
     end
 
     upper_step = max(min_step, upper_step);
@@ -222,14 +252,11 @@ while cur_idx < dense_n
     % 如果选择 next_idx 后，剩余到终点的时间小于 min_dt，
     % 则直接把终点作为下一个点，避免最后产生非法短区间。
     next_idx = cur_idx + chosen_step;
-
-    if dense_n - next_idx > 0 && (dense_n - next_idx) * base_dt < min_dt
-
-        next_idx = dense_n;
+    remaining_to_boundary = next_mandatory - next_idx;
+    if remaining_to_boundary > 0 && remaining_to_boundary < min_step
+        next_idx = next_mandatory;
         chosen_step = next_idx - cur_idx;
-
-        [~, last_valid_box] = ...
-            isIntervalValid(cur_idx, next_idx, base_dt, x1, y1, theta1, v, phy);
+        [~, last_valid_box] = isIntervalValid(cur_idx, next_idx, base_dt, x1, y1, theta1, v, phy);
     end
 
 
@@ -364,27 +391,45 @@ function [is_valid, box_dim] = isIntervalValid(cur_idx, cand_idx, base_dt, x, y,
 global params
 
 delta_t = (cand_idx - cur_idx) * base_dt;
+motion_idx = getIntervalMotionIndex(v, cur_idx, cand_idx);
+interval_v = v(cur_idx:cand_idx);
+has_forward = any(interval_v >  1e-6);
+has_reverse = any(interval_v < -1e-6);
 
-[a_temp, b_temp, c_temp, d_temp] = ...
-    estimateIntervalBox(cur_idx, cand_idx, base_dt, v, phy);
+if has_forward && has_reverse
+    is_valid = false;
+    box_dim = [0, 0, 0, 0];
+    return;
+end
 
+[a_temp, b_temp, c_temp, d_temp] = estimateIntervalBox(cur_idx, cand_idx,x, y, v, phy);
 box_dim = [a_temp, b_temp, c_temp, d_temp];
 
-% 当前节点曲率
-kappa_k = tan(phy(cur_idx)) / params.vehicle.lw;
+% 当前 interval 的代表曲率
+kappa_k = tan(phy(motion_idx)) / params.vehicle.lw;
 abs_kappa_k = abs(kappa_k);
 
-% 当前区间的有符号行驶距离
-signed_s = v(cur_idx) * delta_t;
+% 当前 interval 的实际几何弧长
+dx_interval = diff(x(cur_idx:cand_idx));
+dy_interval = diff(y(cur_idx:cand_idx));
+
+s_abs = sum(hypot(dx_interval, dy_interval));
+
+% 运动方向由当前 interval 第一个非零运动点决定
+sgn = sign(v(motion_idx));
+
+if sgn == 0
+    signed_s = 0;
+else
+    signed_s = sgn * s_abs;
+end
 
 % 前进距离和倒车距离分解
 splus  = smoothPlus(signed_s);
 sminus = smoothPlus(-signed_s);
 
 % 计算 EF box 四个顶点
-[AX, AY, BX, BY, CX, CY, DX, DY] = ...
-    getEFBoxVertices(x(cur_idx), y(cur_idx), theta(cur_idx), ...
-    a_temp, b_temp, c_temp, d_temp);
+[AX, AY, BX, BY, CX, CY, DX, DY] = getEFBoxVertices(x(cur_idx), y(cur_idx), theta(cur_idx),a_temp, b_temp, c_temp, d_temp);
 
 
 % ------------------------------------------------------------
@@ -464,64 +509,34 @@ end
 %% ========================================================================
 % Local Function 4: 估计候选区间 EF 外扩尺度
 % ========================================================================
-function [a_temp, b_temp, c_temp, d_temp] = estimateIntervalBox(cur_idx, cand_idx, base_dt, v, phy)
-%ESTIMATEINTERVALBOX  根据区间行驶距离和曲率估计 EF box 外扩尺度
-%
-% 输入：
-%   cur_idx  : 当前区间起点
-%   cand_idx : 当前候选区间终点
-%
-% 核心变量：
-%   s_k      : 当前区间近似行驶距离
-%   kappa_k  : 当前区间起点曲率
-%   sgn      : 当前运动方向，前进为正，倒车为负
-%
-% 输出：
-%   a_temp, b_temp, c_temp, d_temp : EF box 四向外扩尺度
+function [a_temp, b_temp, c_temp, d_temp] = estimateIntervalBox(cur_idx, cand_idx, x, y, v, phy)
 
 global params
 
-delta_t = (cand_idx - cur_idx) * base_dt;
+% 当前 interval 第一个真正运动的 dense 点
+motion_idx = getIntervalMotionIndex(v, cur_idx, cand_idx);
 
-s_k = abs(v(cur_idx) * delta_t);
+% dense trajectory 在这个 interval 中的实际几何行驶距离
+dx = diff(x(cur_idx:cand_idx));
+dy = diff(y(cur_idx:cand_idx));
 
-kappa_k = tan(phy(cur_idx)) / params.vehicle.lw;
+s_k = sum(hypot(dx, dy));
 
-sgn = getMotionSign(v, cur_idx);
+% 使用当前实际运动段的代表曲率
+kappa_k = tan(phy(motion_idx)) / params.vehicle.lw;
 
-[a_temp, b_temp, c_temp, d_temp] = EstimateAABBnew(s_k, kappa_k, sgn);
+% 使用当前 interval 的实际方向
+sgn = sign(v(motion_idx));
 
+% 极端退化情况
+if sgn == 0
+    sgn = 1;
 end
 
-
-%% ========================================================================
-% Local Function 5: 获取当前运动方向
-% ========================================================================
-function sgn = getMotionSign(v, idx)
-%GETMOTIONSIGN  获取当前节点的运动方向
-%
-% 若 v(idx) 非零，则直接取 sign(v(idx))。
-% 若 v(idx) 接近 0，则向前回溯，寻找最近一个非零速度点的符号。
-%
-% 目的：
-%   在换向点或停车点附近，避免 sign(0)=0 导致 EF box 方向判断失效。
-
-sgn = sign(v(idx));
-
-if abs(v(idx)) >= 1e-6
-    return;
-end
-
-jj = idx;
-
-while jj > 1 && abs(v(jj)) < 1e-6
-    jj = jj - 1;
-end
-
-sgn = sign(v(jj));
+[a_temp, b_temp, c_temp, d_temp] = ...
+    EstimateAABBnew(s_k, kappa_k, sgn);
 
 end
-
 
 %% ========================================================================
 % Local Function 6: 校验最终时间间隔是否合法
@@ -556,7 +571,7 @@ function chg_ef = detectDirectionSwitch(v)
 % 若两个非零速度点之间符号发生变化，则记录当前索引为换向点。
 % 零速点会被跳过，不直接作为换向判断依据。
 
-thr = 0.0005;
+thr = 0.05;
 
 v_sign = zeros(size(v));
 v_sign(v >  thr) = 1;
@@ -594,4 +609,18 @@ if isfield(params, 'nlp') && isfield(params.nlp, 'alpha') && ~isempty(params.nlp
 end
 m = max(0, x);
 val = m + log(exp(alpha * (0 - m)) + exp(alpha * (x - m))) / alpha;
+end
+
+function motion_idx = getIntervalMotionIndex(v, cur_idx, cand_idx)
+thr = 1e-6;
+motion_idx = [];
+for jj = cur_idx:cand_idx
+    if abs(v(jj)) >= thr
+        motion_idx = jj;
+        break;
+    end
+end
+if isempty(motion_idx)
+    motion_idx = cur_idx;
+end
 end

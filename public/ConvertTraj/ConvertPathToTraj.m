@@ -381,7 +381,7 @@ end
 %
 % terminal_time 作为总时长输入
 % ============================================================
-params.ef.dense_change_idx = chg; %保存真实换向点信息
+
 [x, y, theta, v, a, phy, w, time] = TimeDistribution(x1, y1, theta1, v, a, phy, w, terminal_time);
 
 end
