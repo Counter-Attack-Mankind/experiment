@@ -73,13 +73,13 @@ rr_file = fullfile(scheme_dir, 'rr4.run');   % 检测rr.run与NLP.mod是否存�
 nlp_file = fullfile(scheme_dir, 'NLP4.mod');
 
 %日志调试
-fprintf('\nRunning Scheme 1 AMPL solver\n');
+fprintf('\nRunning Scheme 4 AMPL solver\n');
 fprintf('AMPL executable: %s\n', ampl_exe);
 fprintf('AMPL driver    : %s\n', rr_file);
 fprintf('NLP model      : %s\n', nlp_file);
 fprintf('AMPL log file  : %s\n', ampl_log_file);
 
-% 当前工作目录已经是 Scheme1
+% 当前工作目录已经是 Scheme4
 cmd = sprintf('"%s" rr4.run', ampl_exe);
 [ampl_status, ampl_output] = system(cmd);
 
@@ -94,6 +94,8 @@ if fid >= 0
     fclose(fid);
 end
 
+%% ==== Archive optimized results ======
+Scheme4_ArchiveRunFiles(scheme_dir, task_id, 'optimized');
 
 
 %% ==== plot ======

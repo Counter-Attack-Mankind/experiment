@@ -37,7 +37,7 @@ end
 % =========================================================
 if any(strcmpi(phase, {'optimized', 'all'}))
 
-    result_dir = fullfile(scheme_dir, 'results');
+    result_dir = fullfile(scheme_dir, 'runtime');
 
     if isfolder(result_dir)
 

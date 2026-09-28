@@ -37,7 +37,7 @@ end
 % 归档优化结果
 % ==========================
 
-result_dir = fullfile(scheme_dir, 'results');
+result_dir = fullfile(scheme_dir, 'runtime');
 
 if isfolder(result_dir) && any(strcmpi(phase, {'all','optimized'}))
 

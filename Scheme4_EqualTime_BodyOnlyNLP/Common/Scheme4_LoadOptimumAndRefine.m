@@ -3,17 +3,17 @@ function flag = Scheme4_LoadOptimumAndRefine()
 global params
 
 flag = false;
-if exist(fullfile('results', 'opti_flag.txt'), 'file') ~= 2
+if exist(fullfile('runtime', 'opti_flag.txt'), 'file') ~= 2
     return;
 end
-opti_flag = load(fullfile('results', 'opti_flag.txt'));
+opti_flag = load(fullfile('runtime', 'opti_flag.txt'));
 if isempty(opti_flag) || opti_flag(1) == 0
     return;
 end
 
 names = {'x','y','theta','v','a','phy','w','dt'};
 for i = 1:numel(names)
-    file = fullfile('results', [names{i}, '.txt']);
+    file = fullfile('runtime', [names{i}, '.txt']);
     if exist(file, 'file') ~= 2
         return;
     end
