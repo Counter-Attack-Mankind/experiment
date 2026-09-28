@@ -72,10 +72,9 @@ num_samples = size(x, 2); % 过滤后路径点数量（列向量长度）
 % 规则：
 %   若某个方向段长度 < min_length，则不视为真实换向
 % =========================
-min_length = 2;   % 先固定，后续再调
+min_length = 0.05;   % 先固定，后续再调
 
-[change_idx, seg_st, seg_ed, seg_dir, seg_len] = ...
-    getEffectiveChangeIdx(x, y, v0, min_length);
+[change_idx, seg_st, seg_ed, seg_dir, seg_len] =  getEffectiveChangeIdx(x, y, v0, min_length);
 
 params.change = change_idx;
 
@@ -131,13 +130,13 @@ end
 % =========================
 
 if isempty(change_idx)
-    % ---- 无换向：整段同方向（全前进 或 全倒车）----
-    [terminal_time, x1, y1, theta1, v_mag, a_mag] = CalculateTimeStamp(x, y, theta);
 
-    sgn = sign(v0(1));
-    if sgn == 0
-        sgn = 1;
-    end
+    % 单一方向段
+    [terminal_time, x1, y1, theta1, v_mag, a_mag] = ...
+        CalculateTimeStamp(x, y, theta);
+
+    % 使用方向分段结果，不再重新从原始 v0 推断
+    sgn = seg_dir(1);
 
     v = abs(v_mag) * sgn;
     a = a_mag * sgn;
@@ -180,19 +179,10 @@ else
         th_seg = theta(st:ed);
 
         % 当前段做时间最优速度匹配（输出为幅值）
-        [Ts, x1_seg, y1_seg, th1_seg, v_mag_seg, a_mag_seg] = ...
-            CalculateTimeStamp(x_seg, y_seg, th_seg);
+        [Ts, x1_seg, y1_seg, th1_seg, v_mag_seg, a_mag_seg] = CalculateTimeStamp(x_seg, y_seg, th_seg);
 
-        % 当前段方向符号：取该段起点方向
-        sgn = sign(v0(st));
-        if sgn == 0
-            if st > 1
-                sgn = sign(v0(st-1));
-            end
-            if sgn == 0
-                sgn = 1;
-            end
-        end
+        % 当前段方向直接采用 getEffectiveChangeIdx 的分段结果
+        sgn = seg_dir(s);
 
         % 加符号
         v_seg = abs(v_mag_seg) * sgn;
@@ -304,55 +294,84 @@ for ii = 2 : (num_samples2 - 1)
         w(ii) = -params.vehicle.w_max;
     end
 end
+% ============================================================
+% 检测速度匹配后的真实换向
+% ============================================================
+thr = 0.05;
 
-%=================寻找速度匹配后的 换向点=========================%
-thr = 0.05;  %加入一个阈值
-idxF = find(v >  thr);      % 所有"确定前进"的点
-idxR = find(v < -thr);      % 所有"确定倒车"的点
+v_sign = zeros(size(v));
+v_sign(v >  thr) = 1;
+v_sign(v < -thr) = -1;
+
 chg = [];
 
-if ~isempty(idxF) && ~isempty(idxR)
-    % 找到前进最后一个点 和 倒车第一个点
-    iF = idxF(end);
-    iR = idxR(1);
+last_nonzero_idx = [];
+last_nonzero_sign = 0;
 
-    if iF < iR
-        % 换向点就在它们之间：取中间点（或者取 abs(v) 最小点）
-        seg = iF:iR;
-        [~, k0] = min(abs(v(seg)));
-        chg = seg(k0);
+for ii = 1:length(v_sign)
+
+    % 换向点附近 v=0，不直接作为方向
+    if v_sign(ii) == 0
+        continue;
     end
+
+    if isempty(last_nonzero_idx)
+        last_nonzero_idx = ii;
+        last_nonzero_sign = v_sign(ii);
+        continue;
+    end
+
+    % 两个相邻非零运动段方向不同
+    if v_sign(ii) ~= last_nonzero_sign
+
+        % 在两个非零方向点之间找 |v| 最小的位置，
+        % 即停车/换向配置点。
+        search_range = last_nonzero_idx:ii;
+        [~, local_idx] = min(abs(v(search_range)));
+
+        cusp_idx = search_range(local_idx);
+
+        chg(end+1) = cusp_idx; %#ok<AGROW>
+    end
+
+    last_nonzero_idx = ii;
+    last_nonzero_sign = v_sign(ii);
 end
 
-%===========================输出换向点=====================
-fprintf('速度匹配后，检测到换向次数: %d\n', ~isempty(chg));
-if ~isempty(chg)
-    fprintf('换向点 idx=%d, x=%.3f, y=%.3f, v=%.6f\n', ...
-        chg, x1(chg), y1(chg), v(chg));
+chg = unique(chg, 'stable');
+
+fprintf('速度匹配后，检测到换向次数: %d\n', numel(chg));
+
+for k = 1:numel(chg)
+    idx = chg(k);
+
+    fprintf('换向点 #%d: idx=%d, x=%.3f, y=%.3f, v=%.6f\n', k, idx, x1(idx), y1(idx), v(idx));
 end
 
 %============================输出换向点前500和后500序列号的速度，步长为20=====================================
 if ~isempty(chg)
 
-    start_idx = max(1, chg - 100);
-    end_idx   = min(length(x1), chg + 100);
-
     step = 20;
 
-    fprintf('\n===== 换向点附近轨迹 =====\n');
+    for kk = 1:numel(chg)
 
-    for ii = start_idx:step:end_idx
-        fprintf('序号: %d, x: %.3f, y: %.3f, v: %.3f\n', ...
-            ii, x1(ii), y1(ii), v(ii));
+        cusp_idx = chg(kk);
+
+        start_idx = max(1, cusp_idx - 100);
+        end_idx   = min(length(x1), cusp_idx + 100);
+
+        fprintf('\n===== 换向点 #%d 附近轨迹 =====\n', kk);
+
+        for ii = start_idx:step:end_idx
+            fprintf('序号: %d, x: %.3f, y: %.3f, v: %.3f\n', ii, x1(ii), y1(ii), v(ii));
+        end
+
+        fprintf('*** 换向点 #%d *** idx=%d, x=%.3f, y=%.3f, v=%.6f\n', kk, cusp_idx, x1(cusp_idx), y1(cusp_idx), v(cusp_idx));
+
+        fprintf('==========================\n\n');
     end
-
-    % 确保换向点一定输出
-    fprintf('*** 换向点 *** idx=%d, x=%.3f, y=%.3f, v=%.3f\n', ...
-        chg, x1(chg), y1(chg), v(chg));
-
-    fprintf('==========================\n\n');
-
 end
+
 
 
 % ============================================================
@@ -362,6 +381,7 @@ end
 %
 % terminal_time 作为总时长输入
 % ============================================================
+params.ef.dense_change_idx = chg; %保存真实换向点信息
 [x, y, theta, v, a, phy, w, time] = TimeDistribution(x1, y1, theta1, v, a, phy, w, terminal_time);
 
 end

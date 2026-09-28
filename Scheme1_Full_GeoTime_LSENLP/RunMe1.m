@@ -33,7 +33,7 @@ fprintf('===================================\n');
 
 global params
 
-task_id = 1;
+task_id = 7;
 params.task_id = task_id;
 
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
