@@ -6,9 +6,6 @@ scheme_dir = fileparts(mfilename('fullpath'));  %获取当前运行的RunMe.m的
 experiment_root = fileparts(scheme_dir);        %向上回退得到总实验路径 experiment/
 public_dir = fullfile(experiment_root, 'public');   %公共模块放在 experiment/public下
 
-% =========================
-% 公共代码
-% =========================
 addpath(fullfile(public_dir, 'Utilities'));
 addpath(fullfile(public_dir, 'Common'));
 addpath(fullfile(public_dir, 'Environment'));
@@ -16,9 +13,6 @@ addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
 addpath(fullfile(public_dir, 'ConvertTraj'));
-% =========================
-% Scheme4 专用代码
-% =========================
 addpath(scheme_dir);
 addpath(fullfile(scheme_dir, 'Common'));
 
@@ -33,11 +27,13 @@ fprintf('===================================\n');
 
 %% ===== 基础初始化 =====
 global params
-task_id = 9;
+task_id = 20;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
 LoadTask(task_id);
+params.io.scheme_dir = scheme_dir;
+params.io.task_id    = task_id;
 
 %% ==== hybrid A=======
 params.ha.enable_debug_plot = 0;
@@ -56,16 +52,14 @@ end
 %% ===== add velocity and choose point =====
 
 target_nfe = ReadMatchedNfe(task_id, experiment_root);      %从scheme1中读取Nfe
-
 [x, y, theta, v, a, phy, w, time] = Scheme4ConvertPathToTraj(target_nfe);
 fprintf('Scheme4 final Nfe count: %d\n', target_nfe);
-
 Scheme4_WriteInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
-VisualizeEmbodimentFilteredTraj(x, y);
+%VisualizeEmbodimentFilteredTraj(x, y);
 Scheme4_ArchiveRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
-tic
+
 solver_dir = fullfile(public_dir, 'solver');
 ampl_log_file = fullfile(run_paths.root, 'ampl_log.txt');
 ampl_exe = fullfile(public_dir, 'solver', 'ampl.exe');   %指出对应的路径
@@ -83,10 +77,7 @@ fprintf('AMPL log file  : %s\n', ampl_log_file);
 cmd = sprintf('"%s" rr4.run', ampl_exe);
 [ampl_status, ampl_output] = system(cmd);
 
-solve_time = toc;
-
 fprintf('%s\n', ampl_output);
-fprintf('AMPL elapsed time: %.6f s\n', solve_time);
 fid = fopen(ampl_log_file, 'w');
 
 if fid >= 0
@@ -98,9 +89,14 @@ end
 Scheme4_ArchiveRunFiles(scheme_dir, task_id, 'optimized');
 
 
-%% ==== plot ======
-if Scheme4_LoadOptimumAndRefine()
-    PlotTrueVehicleSweptAreaOnly();
-else
-    fprintf('Scheme4 optimization failed.\n');
+%% ==== Unified evaluation and plot ====
+evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
+if evaluation_result.success
+    flag = Scheme4_LoadOptimumAndRefine();
+    if flag
+        PlotTrueVehicleSweptAreaOnly();
+        %Final_Viusalize_withplot();
+    else
+        fprintf('Scheme 4 optimization failed.\n');
+    end
 end

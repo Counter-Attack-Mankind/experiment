@@ -229,6 +229,9 @@ fprintf('蓝色 = 前进真实扫掠区\n');
 fprintf('红色 = 后退真实扫掠区\n');
 fprintf('================================================\n\n');
 
+drawnow;
+SaveTaskFigure(gcf, 'EFboxs');
+
 end
 
 

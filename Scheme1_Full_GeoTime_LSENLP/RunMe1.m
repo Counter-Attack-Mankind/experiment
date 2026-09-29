@@ -23,15 +23,16 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 20;
+task_id = 7;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
 LoadTask(task_id);
-
+params.io.scheme_dir = scheme_dir;
+params.io.task_id    = task_id;
 %% ==== Hybrid A* ====
 
-params.ha.enable_debug_plot = 0;
+params.ha.enable_debug_plot = 1;
 params.ha.debug_plot_stride = 50;
 params.ha.sweep_scale = 0;
 params.visualize.show_ef_boxes = 1;
@@ -92,10 +93,9 @@ end
 
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 
-%% ==== Unified evaluation ====
+%% ==== Unified evaluation and plot ====
 
 evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
-%% ==== Success plot ====
 
 if evaluation_result.success
     flag = LoadEFOptimumAndRefine(scheme_dir);

@@ -104,9 +104,6 @@ else
     mandatory_idx = [];
 end
 
-% 起点、所有 cusp、终点共同构成强制边界
-mandatory_idx = unique([1, mandatory_idx, dense_n], 'stable');
-fprintf('有效尖点数量 : %d\n', max(0, numel(mandatory_idx) - 2));
 
 %% ================================================================
 % Module 5: 基于 EF 可行性的贪心降采样

@@ -6,9 +6,6 @@ scheme_dir = fileparts(mfilename('fullpath'));  %获取当前运行的RunMe.m的
 experiment_root = fileparts(scheme_dir);        %向上回退得到总实验路径 experiment/
 public_dir = fullfile(experiment_root, 'public');   %公共模块放在 experiment/public下
 
-% =========================
-% 公共代码
-% =========================
 addpath(fullfile(public_dir, 'Utilities'));
 addpath(fullfile(public_dir, 'Common'));
 addpath(fullfile(public_dir, 'Environment'));
@@ -16,9 +13,6 @@ addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
 addpath(fullfile(public_dir, 'ConvertTraj'));
-% =========================
-% Scheme2 专用代码
-% =========================
 addpath(scheme_dir);
 
 
@@ -35,10 +29,9 @@ fprintf('===================================\n');
 
 global params
 
-task_id = 3;
+task_id = 20;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
-report = [];
 InitializeParams();
 LoadTask(task_id);
 
@@ -48,7 +41,6 @@ params.ha.debug_plot_stride = 50;
 params.ha.strategy_name = 'Scheme2_BodyOnly_DirectNLP';
 params.visualize.show_ef_boxes = 0;  % 1: show EF boxes; 0: only show true swept area
 
-fprintf('\n========== Scheme 2: Body-only Hybrid A* + direct NLP ==========\n');
 success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 2 Hybrid A* failed: %s', params.ha.fail_reason);
@@ -60,15 +52,15 @@ end
 params.ef.max_dt = 0.25;
 params.ef.config_shrink_scale = 0.9;
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
-VisualizeEmbodimentFilteredTraj(x, y);
+%VisualizeEmbodimentFilteredTraj(x, y);
 
 %% == InitalGuess write and check =======
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
-report = CheckWrittenInitialGuessForNLP();
-ArchiveStrategyRunFiles(scheme_dir, task_id, report, 'initial');
+%report = CheckWrittenInitialGuessForNLP();
+ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
-tic
+
 solver_dir = fullfile(public_dir, 'solver');
 ampl_log_file = fullfile(run_paths.root, 'ampl_log.txt');
 ampl_exe = fullfile(public_dir, 'solver', 'ampl.exe');   %指出对应的路径
@@ -86,10 +78,7 @@ fprintf('AMPL log file  : %s\n', ampl_log_file);
 cmd = sprintf('"%s" rr2.run', ampl_exe);
 [ampl_status, ampl_output] = system(cmd);
 
-solve_time = toc;
-
 fprintf('%s\n', ampl_output);
-fprintf('AMPL elapsed time: %.6f s\n', solve_time);
 fid = fopen(ampl_log_file, 'w');
 
 if fid >= 0
@@ -99,13 +88,15 @@ end
 
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 
-%% == Viusalize ====
-params.visualize.show_ef_boxes = 1;
-flag = LoadEFOptimumAndRefine(scheme_dir);
-
-if flag
-    PlotEFBoxesAndTrueSweptArea();
-    PlotTrueVehicleSweptAreaOnly();
-else
-    fprintf('Scheme 2 optimization failed.\n');
+%% ==== Unified evaluation and plot ====
+evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
+if evaluation_result.success
+    flag = LoadEFOptimumAndRefine(scheme_dir);
+    if flag
+        PlotEFBoxesAndTrueSweptArea();
+        %PlotTrueVehicleSweptAreaOnly();
+        %Final_Viusalize_withplot();
+    else
+        fprintf('Scheme 2 optimization failed.\n');
+    end
 end

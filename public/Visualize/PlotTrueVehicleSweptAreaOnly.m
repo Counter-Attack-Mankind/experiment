@@ -52,8 +52,56 @@ if isfield(params.environment, 'obs') && ~isempty(params.environment.obs)
     end
 end
 
-[h_forward, h_reverse] = DrawGradientVehicleSweptArea( ...
-    ax, x, y, th, v, params.vehicle, forward_col, reverse_col);
+%% ========== 构造真实车辆前进/后退扫掠区域 ==========
+
+swept_forward = polyshape();
+swept_reverse = polyshape();
+
+eps_dir = 1e-10;
+
+for k = 1:numel(x)
+
+    [XB, YB] = bodyRectCorners( ...
+        x(k), y(k), th(k), ...
+        params.vehicle.lf, ...
+        params.vehicle.lw, ...
+        params.vehicle.lr, ...
+        params.vehicle.hlb);
+
+    bodyPoly = polyshape(XB, YB);
+
+    if v(k) > eps_dir
+
+        swept_forward = union( ...
+            swept_forward, ...
+            bodyPoly);
+
+    elseif v(k) < -eps_dir
+
+        swept_reverse = union( ...
+            swept_reverse, ...
+            bodyPoly);
+
+    else
+        % 零速点不单独分类
+    end
+
+end
+
+
+%% ========== 绘制真实扫掠区域 ==========
+
+h_forward = plot( ...
+    swept_forward, ...
+    'FaceColor', forward_col, ...
+    'FaceAlpha', 0.30, ...
+    'EdgeColor', 'none');
+
+h_reverse = plot( ...
+    swept_reverse, ...
+    'FaceColor', reverse_col, ...
+    'FaceAlpha', 0.30, ...
+    'EdgeColor', 'none');
 
 h_path = plot(ax, x, y, '-', ...
     'Color', path_col, ...
@@ -71,6 +119,10 @@ fprintf('\n================ True Swept Area Plot Finished ================\n');
 fprintf('Dense swept-pose count         : %d\n', numel(x));
 fprintf('No EF variables were read for this view.\n');
 fprintf('===============================================================\n\n');
+
+drawnow;
+SaveTaskFigure(gcf, 'TrueBody');
+
 end
 
 function [x, y, th, v] = loadSweptPose()

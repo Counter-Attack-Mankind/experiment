@@ -1,28 +1,29 @@
-function modify_target()
-% 修改 Data_test/*.mat 中的起点/终点参数
-% 只需要改 task_id 一次即可
+function modify_target(file_path)
+% 修改指定任务文件中的起点/终点参数
 
-    % ===== 1. 任务编号 =====
-    task_id = 1;
-    file_path = fullfile('Data_test', [num2str(task_id), '.mat']);
+    % ===== 1. 检查文件 =====
+    if exist(file_path, 'file') ~= 2
+        error('Task file does not exist: %s', file_path);
+    end
 
     % ===== 2. 读取原文件 =====
     data = load(file_path);
 
     % ===== 3. 修改变量 =====
 
-     % data.x0 = 22;
-    %  data.y0 = 2;
-    % data.theta0 = 1.57;
+    % 起点
+    %data.x0 = 3.5;
+    %data.y0 = 20;
+    data.theta0 = 3.14;
 
-       data.xf = 26;
-      % data.yf = 13;
-       data.thetaf = 3.14;
+    % 终点
+    %data.xf = 27;
+    %data.yf = 13;
+    %data.thetaf = 1.57;
 
-    % ===== 4. 保存（覆盖原文件） =====
+    % ===== 4. 覆盖保存 =====
     save(file_path, '-struct', 'data');
 
-    % ===== 5. 可视化检查 =====
-    DrawEnvironment(file_path);
+    fprintf('Task updated: %s\n', file_path);
 
 end
