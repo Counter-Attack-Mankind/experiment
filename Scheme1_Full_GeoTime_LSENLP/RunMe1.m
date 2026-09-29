@@ -1,14 +1,9 @@
 %% ==== 加载工作区间与对应文件 ==========
 % 本文件是（原版混合A*+初始解几何可行性增强+时间可行性增强+缓冲避障模型LSE光滑化），论文中采用的思路
-
 clear all; close all; clc;
 scheme_dir = fileparts(mfilename('fullpath'));
 experiment_root = fileparts(scheme_dir);
 public_dir = fullfile(experiment_root, 'public');
-
-% =========================
-% 公共代码
-% =========================
 addpath(fullfile(public_dir, 'Utilities'));
 addpath(fullfile(public_dir, 'Common'));
 addpath(fullfile(public_dir, 'Environment'));
@@ -16,11 +11,7 @@ addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
 addpath(fullfile(public_dir, 'hybridAstar'));
 addpath(fullfile(public_dir, 'ConvertTraj'));
-% =========================
-% Scheme1 专用代码
-% =========================
 addpath(scheme_dir);
-
 
 % 所有运行时文件都在 Scheme1 目录生成
 cd(scheme_dir);
@@ -32,26 +23,19 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-
-task_id = 12;
+task_id = 20;
 params.task_id = task_id;
-
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
-
 InitializeParams();
 LoadTask(task_id);
 
 %% ==== Hybrid A* ====
 
-params.ha.enable_debug_plot = 1;
+params.ha.enable_debug_plot = 0;
 params.ha.debug_plot_stride = 50;
-params.ha.strategy_name = 'Scheme1_BodyOnly_EFShrink';
-
 params.ha.sweep_scale = 0;
 params.visualize.show_ef_boxes = 1;
-
-fprintf('\n========== Scheme 1: Body-only Hybrid A* + EF shrink repair + NLP ==========\n');
-
+fprintf('\n========== Scheme 1: Hybrid A* + EF shrink repair + LSE_NLP ==========\n');
 success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 1 Hybrid A* failed: %s', params.ha.fail_reason);
@@ -60,39 +44,27 @@ else
 end
 
 %% ==== Add velocity and configuration-point selection ====
-
 params.ef.max_dt = 0.25;
 params.ef.config_shrink_scale = 0.9;
 
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
-
 UpdateNfeConfig(task_id, numel(x));
-
 %VisualizeEmbodimentFilteredTraj(x, y);
-
 scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1));
-
 save(fullfile(run_paths.initial_guess, sprintf('scheme1_initial_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_report');
-
-%% ==== EF shrink ====
-
+%% ==== Initial guess write and check ==== 
 params.ef.shrink.scale_min = 0;
 params.ef.shrink.scale_step = 0.02;
 params.ef.shrink.safety_slack = 1e-7;
 
-%% ==== Initial guess write and check ====
-
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
 scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat');
-
 %save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');
 %report = CheckWrittenInitialGuessForNLP();
-
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
 
-tic
 solver_dir = fullfile(public_dir, 'solver');
 ampl_log_file = fullfile(run_paths.root, 'ampl_log.txt');
 
@@ -110,12 +82,7 @@ fprintf('AMPL log file  : %s\n', ampl_log_file);
 % 当前工作目录已经是 Scheme1
 cmd = sprintf('"%s" rr1.run', ampl_exe);
 [ampl_status, ampl_output] = system(cmd);
-
-solve_time = toc;
-
 fprintf('%s\n', ampl_output);
-fprintf('AMPL elapsed time: %.6f s\n', solve_time);
-
 fid = fopen(ampl_log_file, 'w');
 
 if fid >= 0
@@ -125,14 +92,19 @@ end
 
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'optimized');
 
+%% ==== Unified evaluation ====
+
+evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
 %% ==== Success plot ====
 
-flag = LoadEFOptimumAndRefine(scheme_dir);
+if evaluation_result.success
+    flag = LoadEFOptimumAndRefine(scheme_dir);
 
-if flag
-    PlotEFBoxesAndTrueSweptArea();
-    %PlotTrueVehicleSweptAreaOnly();
-    %Final_Viusalize_withplot();
-else
-    fprintf('Scheme 1 optimization failed.\n');
+    if flag
+        PlotEFBoxesAndTrueSweptArea();
+        %PlotTrueVehicleSweptAreaOnly();
+        %Final_Viusalize_withplot();
+    else
+        fprintf('Scheme 1 optimization failed.\n');
+    end
 end
