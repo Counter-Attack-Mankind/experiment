@@ -27,7 +27,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 28;
+task_id = 20;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -47,7 +47,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    VisualizeHybridAstarPath();
+    %VisualizeHybridAstarPath();
 end
 
 %% ==== Add velocity and configuration-point selection ====
@@ -67,7 +67,7 @@ params.ef.shrink.safety_slack = 1e-7;
 %% ==== Initial guess write and check ====
 
 WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time(1:end-1));
-scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat');
+scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat',false);
 %save(fullfile(run_paths.initial_guess, sprintf('scheme3_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_shrink_report');
 %report = CheckWrittenInitialGuessForNLP();
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
@@ -106,7 +106,7 @@ evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
 if evaluation_result.success
     flag = LoadEFOptimumAndRefine(scheme_dir);
     if flag
-        PlotEFBoxesAndTrueSweptArea();
+        %PlotEFBoxesAndTrueSweptArea();
         %PlotTrueVehicleSweptAreaOnly();
         %Final_Viusalize_withplot();
     else

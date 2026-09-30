@@ -146,45 +146,78 @@ end
 
 %% ========================================================================
 % Local Function 1
-% 解析 IPOPT CPU 时间
+% 解析 IPOPT 总求解 CPU 时间
+%
+% Total solver CPU =
+%   IPOPT internal CPU (w/o function evaluations)
+% + NLP function evaluation CPU
 % ========================================================================
 function cpu_sec = parseIpoptCpuTime(log_file)
 
 cpu_sec = NaN;
 
 if exist(log_file, 'file') ~= 2
-
     warning( ...
         'EvaluateOptimizationResult:MissingLog', ...
         'AMPL log file does not exist: %s', ...
         log_file);
-
     return;
 end
 
 log_text = fileread(log_file);
 
-pattern = ...
+% ------------------------------------------------------------
+% 1. IPOPT 内部 CPU 时间，不包含 NLP 函数求值
+% ------------------------------------------------------------
+pattern_ipopt = ...
     'Total CPU secs in IPOPT \(w/o function evaluations\)\s*=\s*([0-9Ee+\-.]+)';
 
-token = regexp( ...
+token_ipopt = regexp( ...
     log_text, ...
-    pattern, ...
+    pattern_ipopt, ...
     'tokens', ...
     'once');
 
-if isempty(token)
+% ------------------------------------------------------------
+% 2. NLP 函数求值 CPU 时间
+% ------------------------------------------------------------
+pattern_eval = ...
+    'Total CPU secs in NLP function evaluations\s*=\s*([0-9Ee+\-.]+)';
 
+token_eval = regexp( ...
+    log_text, ...
+    pattern_eval, ...
+    'tokens', ...
+    'once');
+
+% ------------------------------------------------------------
+% 3. 检查日志是否完整
+% ------------------------------------------------------------
+if isempty(token_ipopt)
     warning( ...
-        'EvaluateOptimizationResult:CpuTimeNotFound', ...
+        'EvaluateOptimizationResult:IpoptCpuTimeNotFound', ...
         ['Cannot find "Total CPU secs in IPOPT ', ...
          '(w/o function evaluations)" in %s.'], ...
         log_file);
-
     return;
 end
 
-cpu_sec = str2double(token{1});
+if isempty(token_eval)
+    warning( ...
+        'EvaluateOptimizationResult:FunctionEvalCpuTimeNotFound', ...
+        ['Cannot find "Total CPU secs in NLP function evaluations" ', ...
+         'in %s.'], ...
+        log_file);
+    return;
+end
+
+% ------------------------------------------------------------
+% 4. 总求解 CPU 时间
+% ------------------------------------------------------------
+cpu_ipopt = str2double(token_ipopt{1});
+cpu_eval  = str2double(token_eval{1});
+
+cpu_sec = cpu_ipopt + cpu_eval;
 
 end
 

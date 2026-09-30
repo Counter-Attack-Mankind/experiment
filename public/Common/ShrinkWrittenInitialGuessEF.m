@@ -1,4 +1,4 @@
-function shrink_report = ShrinkWrittenInitialGuessEF(matfile)
+function shrink_report = ShrinkWrittenInitialGuessEF(matfile, show_plot)
 
 global params
 
@@ -6,7 +6,12 @@ if nargin < 1 || isempty(matfile)
     matfile = 'written_initial_guess_data.mat';
 end
 
+if nargin < 2 || isempty(show_plot)
+    show_plot = false;   % 默认不画
+end
+
 opts = getShrinkOptions();
+opts.show_plot = show_plot;
 S = load(matfile);
 if ~isfield(S, 'data')
     error('No variable named data found in %s.', matfile);
@@ -98,7 +103,7 @@ global params
 opts.scale_min = 0;
 opts.scale_step = 0.02;
 opts.safety_slack = 1e-7;
-opts.show_plot = true;
+
 
 if isfield(params.ef, 'shrink')
     user_opts = params.ef.shrink;
