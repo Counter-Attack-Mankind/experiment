@@ -27,7 +27,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 21;
+task_id = 16;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -51,25 +51,14 @@ else
 end
 
 %% ==== Add velocity and configuration-point selection ====
-
-params.ef.max_dt = 0.25;
-params.ef.config_shrink_scale = 0.9;
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 %VisualizeEmbodimentFilteredTraj(x, y);
-%scheme3_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1));
-%save(fullfile(run_paths.initial_guess, sprintf('scheme3_initial_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_report');
 
-%% ==== EF shrink ====
-params.ef.shrink.scale_min = 0;
-params.ef.shrink.scale_step = 0.02;
-params.ef.shrink.safety_slack = 1e-7;
 
 %% ==== Initial guess write and check ====
-
-WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time(1:end-1));
-scheme3_ef_shrink_report = ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat',false);
-%save(fullfile(run_paths.initial_guess, sprintf('scheme3_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme3_ef_shrink_report');
-%report = CheckWrittenInitialGuessForNLP();
+WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
+ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat');
+VisualizeInitialEFCollision('written_initial_guess_data.mat');
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====

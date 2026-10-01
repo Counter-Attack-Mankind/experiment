@@ -40,8 +40,6 @@ params.ha.enable_debug_plot = 0;
 params.ha.debug_plot_stride = 50;
 params.ha.strategy_name = 'Scheme4_body_only_baseline';
 params.ha.sweep_scale = 0;
-params.ef.max_dt = 0.25;
-params.ef.config_shrink_scale = 0.9;
 
 fprintf('\n========== Scheme4: body-only Hybrid A* + Nfe count + body-only NLP ==========\n');
 success = SearchTrajViaHybridAstar();

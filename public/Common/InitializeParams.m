@@ -29,30 +29,29 @@ params.vehicle.min_turning_radius = params.vehicle.lw / (tan(params.vehicle.phy_
 params.vehicle.max_kappa = 1 / params.vehicle.min_turning_radius;      %车辆的最大曲率，即1/车辆最小转弯半径 kappa = 1/R
 
 %% Hybrid A* 搜索栅格与权重
-params.ha.dx = 0.1; %搜索的X轴的离散步长
-params.ha.dy = 0.1; %搜索的Y轴的离散步长
-params.ha.dtheta = 0.1;  %搜索的theta的离散步长
-params.ha.nx = ceil(params.environment.xhorizon / params.ha.dx) + 1;    %地图x轴栅格数量， nx = map.xhorizon(总跨度)/ ha.dx(地图x轴分辨率) 
+%% Hybrid A* 搜索栅格与参数
+params.ha.dx = 0.1;
+params.ha.dy = 0.1;
+params.ha.dtheta = 0.1;
+
+params.ha.nx = ceil(params.environment.xhorizon / params.ha.dx) + 1;
 params.ha.ny = ceil(params.environment.yhorizon / params.ha.dy) + 1;
-params.ha.ntheta = ceil(2 * pi / params.ha.dtheta) + 1;     % 航向角的栅格数量 ntheta = 2pi / dtheta
+params.ha.ntheta = ceil(2*pi / params.ha.dtheta) + 1;
+
 params.ha.num_phy_ha = 5;
-params.ha.penalty_on_phy_change = 0.01;  % 惩罚方向盘频繁变动（让路径尽量走直线）
-%-----------------（新增）---------------
+params.ha.simu_unit_duration = 2;
 
-params.ha.penalty_on_direction_change = 8; % 换向惩罚
-params.ha.penalty_for_backward = 0;     % 倒车惩罚
-params.ha.rs_reverse_cost = 1.0;             % RS 中前进/倒车长度等价
+params.ha.penalty_on_phy_change = 0.01;
+params.ha.penalty_for_backward = 4;
 
-params.ha.max_iter        = 20000;
-params.ha.max_openlist    = 50000;
+params.ha.multiplier_on_heuristics = 10;
+
+params.ha.max_iter = 20000;
 params.ha.max_search_time = 10.0;
 
-%---------------------------------------
-params.ha.penalty_on_biased_from_reference_line = 2;    % 惩罚偏离参考线的代价
-params.ha.simu_unit_duration = 2;     % 搜索时每一小段模拟的持续时间，2
-params.ha.iter_for_HA = 99000;      % 搜索的最大允许迭代次数，防止死循环
-params.ha.multiplier_on_heuristics = 10;    % 启发式权重的增益。10 代表非常贪婪，直奔终点。
-params.ha.nfe = 200;    % 混合A*给出的最大离散点
+params.ha.enable_recording = 0;
+params.ha.iter_for_HA = 99000;
+params.ha.nfe = 200;
 
 %% 非线性规划问题的参数配置
 params.nlp.threshold_rate = 0.6; % 轨迹采样阈值，用于判断何时保留采样点

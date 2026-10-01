@@ -54,7 +54,7 @@ end
 
 %% == InitalGuess write and check =======
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
-%report = CheckWrittenInitialGuessForNLP();
+VisualizeInitialEFCollision('written_initial_guess_data.mat');
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
