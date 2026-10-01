@@ -48,20 +48,17 @@ end
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 UpdateNfeConfig(task_id, numel(x));
 %VisualizeEmbodimentFilteredTraj(x, y);
-scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1),0);      % 检查哪些缓冲足迹不满足避障要求
-save(fullfile(run_paths.initial_guess, sprintf('scheme1_initial_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_report');
+
 %% ==== Initial guess write and check ==== 
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
-scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat',false);
-%save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');
-%report = CheckWrittenInitialGuessForNLP();
+ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat');
+VisualizeInitialEFCollision('written_initial_guess_data.mat');
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
 
 solver_dir = fullfile(public_dir, 'solver');
 ampl_log_file = fullfile(run_paths.root, 'ampl_log.txt');
-
 ampl_exe = fullfile(public_dir, 'solver', 'ampl.exe');   %指出对应的路径
 rr_file = fullfile(scheme_dir, 'rr1.run');   % 检测rr.run与NLP.mod是否存在，并且读取路径
 nlp_file = fullfile(scheme_dir, 'NLP1.mod');

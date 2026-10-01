@@ -65,7 +65,7 @@ params.guiding_path.y = [];
 params.ef.max_dt = 0.25; % 具身足迹的最大时间跨度
 params.ef.min_dt = 0.01; % 具身足迹的最小时间跨度
 params.ef.temporal_tightening_eta = 0.9;
-
+params.nlp.alpha = 60;
 params.ef.shrink.scale_min = 0;
 params.ef.shrink.scale_step = 0.02;
 params.ef.shrink.safety_slack = 1e-7;
