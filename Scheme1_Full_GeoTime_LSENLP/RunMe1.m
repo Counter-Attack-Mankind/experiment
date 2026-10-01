@@ -23,7 +23,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = ;
+task_id = 13;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -32,7 +32,7 @@ params.io.scheme_dir = scheme_dir;
 params.io.task_id    = task_id;
 %% ==== Hybrid A* ====
 
-params.ha.enable_debug_plot = 1;
+params.ha.enable_debug_plot = 0;
 params.ha.debug_plot_stride = 50;
 params.ha.sweep_scale = 0;
 params.visualize.show_ef_boxes = 1;
@@ -41,7 +41,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 1 Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    VisualizeHybridAstarPath();
+    %VisualizeHybridAstarPath();
 end
 
 %% ==== Add velocity and configuration-point selection ====
