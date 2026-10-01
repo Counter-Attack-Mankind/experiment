@@ -23,7 +23,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 20;
+task_id = 17;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -32,7 +32,7 @@ params.io.scheme_dir = scheme_dir;
 params.io.task_id    = task_id;
 %% ==== Hybrid A* ====
 
-params.ha.enable_debug_plot = 0;
+params.ha.enable_debug_plot = 1;
 params.ha.debug_plot_stride = 50;
 params.ha.sweep_scale = 0;
 params.visualize.show_ef_boxes = 1;
@@ -41,7 +41,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 1 Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    %VisualizeHybridAstarPath();
+    VisualizeHybridAstarPath();
 end
 
 %% ==== Add velocity and configuration-point selection ====
@@ -51,7 +51,7 @@ params.ef.config_shrink_scale = 0.9;
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 UpdateNfeConfig(task_id, numel(x));
 %VisualizeEmbodimentFilteredTraj(x, y);
-scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1),0);
+scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1),0);      % 检查哪些缓冲足迹不满足避障要求
 save(fullfile(run_paths.initial_guess, sprintf('scheme1_initial_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_report');
 %% ==== Initial guess write and check ==== 
 params.ef.shrink.scale_min = 0;
@@ -101,7 +101,7 @@ if evaluation_result.success
     flag = LoadEFOptimumAndRefine(scheme_dir);
 
     if flag
-        %PlotEFBoxesAndTrueSweptArea();
+        PlotEFBoxesAndTrueSweptArea();
         %PlotTrueVehicleSweptAreaOnly();
         %Final_Viusalize_withplot();
     else

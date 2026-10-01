@@ -2,14 +2,6 @@ function shrink_report = ShrinkWrittenInitialGuessEF(matfile, show_plot)
 
 global params
 
-if nargin < 1 || isempty(matfile)
-    matfile = 'written_initial_guess_data.mat';
-end
-
-if nargin < 2 || isempty(show_plot)
-    show_plot = false;   % 默认不画
-end
-
 opts = getShrinkOptions();
 opts.show_plot = show_plot;
 S = load(matfile);
@@ -18,6 +10,7 @@ if ~isfield(S, 'data')
 end
 D = S.data;
 
+%为每一个 EF box 建立记录量,分别记录最终放缩量
 Nbox = numel(D.AX);
 scale_used = ones(Nbox, 1);
 before_min_slack = inf(Nbox, 1);
@@ -25,18 +18,15 @@ after_min_slack = inf(Nbox, 1);
 is_repaired = false(Nbox, 1);
 is_unresolved = false(Nbox, 1);
 
-fprintf('\n========== EF Shrink Initial Guess ==========\n');
-fprintf('scale_min                 : %.6f\n', opts.scale_min);
-fprintf('scale_step                : %.6f\n', opts.scale_step);
-fprintf('safety_slack              : %.6e\n', opts.safety_slack);
-
+%逐个检查 EF 是否存在碰撞约束违反
 for i = 1:Nbox
-    before_min_slack(i) = intervalObstacleMinSlack(D, i);
-    if before_min_slack(i) >= opts.safety_slack
+    before_min_slack(i) = intervalObstacleMinSlack(D, i);   %计算当前第 i 个 EF 与全部障碍物之间的最差约束裕量。
+    if before_min_slack(i) >= opts.safety_slack     %若该EF盒子大于安全余量，跳转到下一个
         after_min_slack(i) = before_min_slack(i);
         continue;
     end
 
+    % 若违反，则逐渐缩小EF，步长是0.02，从1.00->0.98->0.96->.....->0
     best = [];
     best_any = [];
     scale_grid = 1:-opts.scale_step:opts.scale_min;
@@ -98,6 +88,7 @@ if opts.show_plot
 end
 end
 
+% 读取缩小变量
 function opts = getShrinkOptions()
 global params
 opts.scale_min = 0;
@@ -116,6 +107,7 @@ if isfield(params.ef, 'shrink')
 end
 end
 
+% 可视化
 function PlotShrinkCollisionVerification(D, shrink_report)
 AX = D.AX(:); AY = D.AY(:);
 BX = D.BX(:); BY = D.BY(:);
@@ -180,6 +172,7 @@ xlabel('interval i');
 title('NLP1 collision constraint status after shrink');
 end
 
+% EF放缩
 function C = makeScaledInterval(D, i, sc)
 C = D;
 
@@ -200,6 +193,7 @@ for k = 1:numel(fields)
 end
 end
 
+% 计算外扩车身矩形的四个角点
 function [AX, AY, BX, BY, CX, CY, DX, DY] = intervalBoxVertices(D, i)
 LF = D.meta.LF;
 lr = D.meta.lr;
@@ -219,6 +213,7 @@ CY = D.y(i) - (lr + D.down(i)) * st - (hlb + D.right(i)) * ct;
 DY = D.y(i) - (lr + D.down(i)) * st + (hlb + D.left(i)) * ct;
 end
 
+% 碰撞约束判定核心
 function min_slack = intervalObstacleMinSlack(D, i)
 if i < 2 || i > D.meta.Nfe - 1
     min_slack = inf;

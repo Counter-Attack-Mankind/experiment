@@ -27,7 +27,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 20;
+task_id = 21;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -106,7 +106,7 @@ evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
 if evaluation_result.success
     flag = LoadEFOptimumAndRefine(scheme_dir);
     if flag
-        %PlotEFBoxesAndTrueSweptArea();
+        PlotEFBoxesAndTrueSweptArea();
         %PlotTrueVehicleSweptAreaOnly();
         %Final_Viusalize_withplot();
     else
