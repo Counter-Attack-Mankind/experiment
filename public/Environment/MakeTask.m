@@ -18,6 +18,6 @@ if exist(task_file, 'file') ~= 2
 end
 
 %DrawEnvironment(task_file);
-%EditTaskObstacles(task_file, task_file);
+EditTaskObstacles(task_file, task_file);
 modify_target(task_file);
 DrawEnvironment(task_file);

@@ -469,41 +469,8 @@ for kk = 1:length(x)
         end
     end
 end
-
-% ===== 轨迹段扫掠盒子检测 =====
-k = tan(phy) / params.vehicle.lw;
-step_len = dir * local_dt;
-
-[a_s, b_s, c_s, d_s]=EstimateScaledAABB(step_len, k);
-
-[AX, AY, BX, BY, CX, CY, DX, DY] = ddd2(x, y, theta, a_s, b_s, c_s, d_s);
-
-for jj = 1:numel(AX)
-    sweep_poly = [AX(jj) AY(jj);
-                  BX(jj) BY(jj);
-                  CX(jj) CY(jj);
-                  DX(jj) DY(jj)];
-
-    % 边界检测
-    if any(sweep_poly(:,1) > params.environment.xmax) || ...
-       any(sweep_poly(:,1) < params.environment.xmin) || ...
-       any(sweep_poly(:,2) > params.environment.ymax) || ...
-       any(sweep_poly(:,2) < params.environment.ymin)
-        return;
-    end
-
-    % 与各障碍物做 SAT 检测
-    for ii = 1:params.environment.num_obs
-        obs_poly = [params.environment.obs(ii).x(:), ...
-                    params.environment.obs(ii).y(:)];
-
-        if SAT_PolygonCollision(sweep_poly, obs_poly)
-            return;
-        end
-    end
-end
-
 is_valid = 1;
+
 end
 function is_collide = SAT_PolygonCollision(poly1, poly2)
 % poly1, poly2: N×2, M×2

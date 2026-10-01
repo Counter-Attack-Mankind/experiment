@@ -29,7 +29,6 @@ params.vehicle.min_turning_radius = params.vehicle.lw / (tan(params.vehicle.phy_
 params.vehicle.max_kappa = 1 / params.vehicle.min_turning_radius;      %车辆的最大曲率，即1/车辆最小转弯半径 kappa = 1/R
 
 %% Hybrid A* 搜索栅格与权重
-%% Hybrid A* 搜索栅格与参数
 params.ha.dx = 0.1;
 params.ha.dy = 0.1;
 params.ha.dtheta = 0.1;
@@ -42,7 +41,7 @@ params.ha.num_phy_ha = 5;
 params.ha.simu_unit_duration = 2;
 
 params.ha.penalty_on_phy_change = 0.01;
-params.ha.penalty_for_backward = 4;
+params.ha.penalty_for_backward = 0.1;
 
 params.ha.multiplier_on_heuristics = 10;
 
