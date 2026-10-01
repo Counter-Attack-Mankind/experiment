@@ -17,8 +17,8 @@ function modify_target(file_path)
     data.theta0 = 0;
 
     % 终点
-    data.xf = 27;
-    data.yf = 18.5;
+    data.xf = 28;
+    data.yf = 18;
     data.thetaf = 3.14;
 
     % ===== 4. 覆盖保存 =====

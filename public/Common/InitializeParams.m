@@ -41,9 +41,12 @@ params.ha.num_phy_ha = 5;
 params.ha.simu_unit_duration = 2;
 
 params.ha.penalty_on_phy_change = 0.01;
-params.ha.penalty_for_backward = 0.1;
-
+params.ha.penalty_for_backward = 5;
 params.ha.multiplier_on_heuristics = 10;
+params.ha.rs_reverse_cost = 5;
+params.ha.rs_trigger_distance = 8.0;
+params.ha.rs_try_interval = 20;
+params.ha.rs_sample_ds = 0.05;
 
 params.ha.max_iter = 20000;
 params.ha.max_search_time = 10.0;
