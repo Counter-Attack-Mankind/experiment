@@ -29,7 +29,7 @@ fprintf('===================================\n');
 
 global params
 
-task_id = 2;
+task_id = 20;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -45,7 +45,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 2 Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    %VisualizeHybridAstarPath();
+    VisualizeHybridAstarPath();
 end
 
 %% ===add velocity and point choose====
