@@ -49,8 +49,6 @@ else
 end
 
 %% ===add velocity and point choose====
-params.ef.max_dt = 0.25;
-params.ef.config_shrink_scale = 0.9;
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 %VisualizeEmbodimentFilteredTraj(x, y);
 

@@ -23,7 +23,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 17;
+task_id = 21;
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -45,19 +45,12 @@ else
 end
 
 %% ==== Add velocity and configuration-point selection ====
-params.ef.max_dt = 0.25;
-params.ef.config_shrink_scale = 0.9;
-
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 UpdateNfeConfig(task_id, numel(x));
 %VisualizeEmbodimentFilteredTraj(x, y);
 scheme1_ef_report = CheckInitialEFCollision(x, y, theta, v, phy, time(1:end-1),0);      % 检查哪些缓冲足迹不满足避障要求
 save(fullfile(run_paths.initial_guess, sprintf('scheme1_initial_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_report');
 %% ==== Initial guess write and check ==== 
-params.ef.shrink.scale_min = 0;
-params.ef.shrink.scale_step = 0.02;
-params.ef.shrink.safety_slack = 1e-7;
-
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
 scheme1_ef_shrink_report = ShrinkWrittenInitialGuessEF( 'written_initial_guess_data.mat',false);
 %save(fullfile(run_paths.initial_guess, sprintf('scheme1_shrunk_ef_report_task_%02d.mat', task_id)), 'scheme1_ef_shrink_report');

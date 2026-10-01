@@ -64,7 +64,11 @@ params.guiding_path.x = []; % 存储引导路径的占位符
 params.guiding_path.y = [];
 params.ef.max_dt = 0.25; % 具身足迹的最大时间跨度
 params.ef.min_dt = 0.01; % 具身足迹的最小时间跨度
+params.ef.temporal_tightening_eta = 0.9;
 
+params.ef.shrink.scale_min = 0;
+params.ef.shrink.scale_step = 0.02;
+params.ef.shrink.safety_slack = 1e-7;
 %% 具身足迹半径与 LIOM 优化设置
 params.vehicle.p2r = 0.25 * params.vehicle.length - params.vehicle.lr; % 车身几何中心偏置计算（后部）
 params.vehicle.p2f = 0.75 * params.vehicle.length - params.vehicle.lr; % 车身几何中心偏置计算（前部）
