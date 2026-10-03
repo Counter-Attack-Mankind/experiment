@@ -15,7 +15,10 @@ $ErrorActionPreference = 'Stop'
 
 $experimentRoot = [System.IO.Path]::GetFullPath(
     (Split-Path -Parent $MyInvocation.MyCommand.Path))
-$taskDirectory = Join-Path $experimentRoot 'public\Environment\real'
+# Change only this value to switch the experiment data source.
+# $taskSource = 'Data_test'
+$taskSource = 'real'
+$taskDirectory = Join-Path $experimentRoot "public\Environment\$taskSource"
 $resultsFile = Join-Path $experimentRoot 'results.csv'
 
 $schemes = @(
@@ -148,9 +151,9 @@ function Reset-SchemeScratch {
     }
 }
 
-function Get-RealTaskIds {
+function Get-TaskIds {
     if (-not (Test-Path -LiteralPath $taskDirectory -PathType Container)) {
-        throw "Real-task directory does not exist: $taskDirectory"
+        throw "Task directory for source '$taskSource' does not exist: $taskDirectory"
     }
 
     $ids = @(
@@ -165,7 +168,7 @@ function Get-RealTaskIds {
             Sort-Object -Unique
     )
     if ($ids.Count -eq 0) {
-        throw "No MAT tasks were found in $taskDirectory"
+        throw "No MAT tasks were found for source '$taskSource' in $taskDirectory"
     }
     return $ids
 }
@@ -257,7 +260,7 @@ function Initialize-ResultsFile {
         }
         [System.IO.File]::WriteAllLines(
             $resultsFile, $outputLines, [System.Text.UTF8Encoding]::new($false))
-        Write-Host 'Added missing real tasks to results.csv; existing results were preserved.'
+        Write-Host "Added missing $taskSource tasks to results.csv; existing results were preserved."
     } else {
         Write-Host 'Existing results.csv validated and preserved.'
     }
@@ -358,7 +361,7 @@ if ($Clear) {
     exit 0
 }
 
-$taskIds = @(Get-RealTaskIds)
+$taskIds = @(Get-TaskIds)
 Initialize-ResultsFile -TaskIds $taskIds
 
 if ($InitializeOnly) {
@@ -385,7 +388,7 @@ if ($null -eq $matlabCommand) {
 
 $previousTaskId = $env:EXPERIMENT_TASK_ID
 $previousTaskSource = $env:EXPERIMENT_TASK_SOURCE
-$env:EXPERIMENT_TASK_SOURCE = 'real'
+$env:EXPERIMENT_TASK_SOURCE = $taskSource
 $failures = [System.Collections.Generic.List[string]]::new()
 
 try {
