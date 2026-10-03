@@ -51,7 +51,7 @@ success = SearchTrajViaHybridAstar();
 if ~success
     error('Scheme 2 Hybrid A* failed: %s', params.ha.fail_reason);
 else
-    VisualizeHybridAstarPath();
+    %VisualizeHybridAstarPath();
 end
 
 %% ===add velocity and point choose====

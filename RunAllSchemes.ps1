@@ -12,7 +12,7 @@ $schemes = @(
     @{ Index = 1; Name = 'scheme1'; Directory = 'Scheme1_Full_GeoTime_LSENLP'; Script = 'RunMe1.m' },
     @{ Index = 2; Name = 'scheme2'; Directory = 'Scheme2_NoGeo_Time_LSENLP'; Script = 'RunMe2.m' },
     @{ Index = 3; Name = 'scheme3'; Directory = 'Scheme3_GeoTime_MaxNLP'; Script = 'RunMe3.m' },
-    @{ Index = 4; Name = 'scheme4'; Directory = 'Scheme4_EqualTime_BodyOnlyNLP'; Script = 'RunMe4.m' }
+    @{ Index = 4; Name = 'scheme4'; Directory = 'Scheme4_body_only_baseline'; Script = 'RunMe4.m' }
 )
 
 $taskIds = Get-ChildItem -LiteralPath $taskDirectory -Filter '*.mat' |
