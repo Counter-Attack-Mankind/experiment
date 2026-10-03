@@ -57,7 +57,7 @@ else
 end
 
 %% ==== Add velocity and configuration-point selection ====
-[x, y, theta, v, a, phy, w, time] = ConvertPathToTrajMax();
+[x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
 %VisualizeEmbodimentFilteredTraj(x, y);
 
 
