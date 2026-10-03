@@ -1,0 +1,85 @@
+reset;
+
+shell ("if not exist runtime mkdir runtime");
+
+# =========================
+# 初始化求解标志
+# =========================
+shell ("if exist runtime\opti_flag.txt del runtime\opti_flag.txt");
+
+printf "0" > "runtime/opti_flag.txt";
+close "runtime/opti_flag.txt";
+
+# =========================
+# 删除旧输出
+# =========================
+shell ("if exist runtime\x.txt del runtime\x.txt");
+shell ("if exist runtime\y.txt del runtime\y.txt");
+shell ("if exist runtime\theta.txt del runtime\theta.txt");
+shell ("if exist runtime\v.txt del runtime\v.txt");
+shell ("if exist runtime\a.txt del runtime\a.txt");
+shell ("if exist runtime\phy.txt del runtime\phy.txt");
+shell ("if exist runtime\w.txt del runtime\w.txt");
+shell ("if exist runtime\dt.txt del runtime\dt.txt");
+
+# =========================
+# 加载本 Scheme 的模型与初值
+# =========================
+model NLP4.mod;
+include ig_scheme4.INIVAL;
+
+option solver "../public/solver/ipopt.exe";
+option ipopt_options 'option_file_name=../public/solver/ipopt.opt';
+
+solve;
+
+# =========================
+# 写求解状态
+# =========================
+shell ("if exist runtime\opti_flag.txt del runtime\opti_flag.txt");
+
+if match (solve_message, "Optimal") > 0 then {
+    printf "1" > "runtime/opti_flag.txt";
+} else {
+    printf "0" > "runtime/opti_flag.txt";
+};
+
+close "runtime/opti_flag.txt";
+
+# =========================
+# 节点变量：1..Nfe
+# =========================
+for {i in 1..Nfe} {
+    printf "%12.8f\n", x[i]     >> "runtime/x.txt";
+    printf "%12.8f\n", y[i]     >> "runtime/y.txt";
+    printf "%12.8f\n", theta[i] >> "runtime/theta.txt";
+    printf "%12.8f\n", v[i]     >> "runtime/v.txt";
+    printf "%12.8f\n", a[i]     >> "runtime/a.txt";
+    printf "%12.8f\n", phy[i]   >> "runtime/phy.txt";
+    printf "%12.8f\n", w[i]     >> "runtime/w.txt";
+}
+
+# =========================
+# 区间变量：1..Nfe-1
+# =========================
+for {i in 1..Nfe-1} {
+    printf "%12.8f\n", dt[i] >> "runtime/dt.txt";
+}
+
+# =========================
+# 关闭文件
+# =========================
+close "runtime/x.txt";
+close "runtime/y.txt";
+close "runtime/theta.txt";
+close "runtime/v.txt";
+close "runtime/a.txt";
+close "runtime/phy.txt";
+close "runtime/w.txt";
+close "runtime/dt.txt";
+
+# =========================
+# 显示基本结果
+# =========================
+display sum{i in 1..Nfe-1}(dt[i]);
+display tf;

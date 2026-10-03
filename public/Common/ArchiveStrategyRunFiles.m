@@ -19,6 +19,9 @@ if any(strcmpi(phase, {'all','initial'}))
     copyIfExists(fullfile(scheme_dir, 'PV'), ...
                  paths.initial_guess);
 
+    copyIfExists(fullfile(scheme_dir, 'OBCAData.dat'), ...
+                 paths.initial_guess);
+
     copyIfExists(fullfile(scheme_dir, 'PPP'), ...
                  paths.initial_guess);
 

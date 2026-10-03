@@ -29,7 +29,11 @@ fprintf('===================================\n');
 
 global params
 
-task_id = 20;
+task_id = 25;
+batch_task_id = str2double(getenv('EXPERIMENT_TASK_ID'));
+if isfinite(batch_task_id) && batch_task_id >= 1
+    task_id = round(batch_task_id);
+end
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();

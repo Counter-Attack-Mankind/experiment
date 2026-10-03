@@ -86,30 +86,30 @@ while ((~isempty(openlist_))&&(~completeness_flag))
     end
 end
 %=========================================
-% visited_map = zeros(params.ha.nx, params.ha.ny);
-% for ix = 1:params.ha.nx
-%     for iy = 1:params.ha.ny
-%         if ~isempty(grid_space_2D_{ix, iy})
-%             visited_map(ix, iy) = 1;
-%         end
-%     end
-% end
-% 
-% figure;
-% imagesc(params.dialated_map');
-% set(gca, 'YDir', 'normal');
-% axis equal tight;
-% colormap(gray);
-% hold on;
-% 
-% [vis_row, vis_col] = find(visited_map' > 0);
-% plot(vis_col, vis_row, 'b.', 'MarkerSize', 4);
-% 
-% plot(init_node(8), init_node(9), 'go', 'MarkerSize', 10, 'LineWidth', 2);
-% plot(goal_ind(1), goal_ind(2), 'ro', 'MarkerSize', 10, 'LineWidth', 2);
-% 
-% title('A* visited cells on dialated map');
-% legend('visited', 'start', 'goal');
+visited_map = zeros(params.ha.nx, params.ha.ny);
+for ix = 1:params.ha.nx
+    for iy = 1:params.ha.ny
+        if ~isempty(grid_space_2D_{ix, iy})
+            visited_map(ix, iy) = 1;
+        end
+    end
+end
+
+figure;
+imagesc(params.dialated_map');
+set(gca, 'YDir', 'normal');
+axis equal tight;
+colormap(gray);
+hold on;
+
+[vis_row, vis_col] = find(visited_map' > 0);
+plot(vis_col, vis_row, 'b.', 'MarkerSize', 4);
+
+plot(init_node(8), init_node(9), 'go', 'MarkerSize', 10, 'LineWidth', 2);
+plot(goal_ind(1), goal_ind(2), 'ro', 'MarkerSize', 10, 'LineWidth', 2);
+
+title('A* visited cells on dialated map');
+legend('visited', 'start', 'goal');
 %==============================================
 
 if (completeness_flag)

@@ -27,7 +27,11 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 13;
+task_id = 4;
+batch_task_id = str2double(getenv('EXPERIMENT_TASK_ID'));
+if isfinite(batch_task_id) && batch_task_id >= 1
+    task_id = round(batch_task_id);
+end
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -51,7 +55,7 @@ else
 end
 
 %% ==== Add velocity and configuration-point selection ====
-[x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
+[x, y, theta, v, a, phy, w, time] = ConvertPathToTrajMax();
 %VisualizeEmbodimentFilteredTraj(x, y);
 
 
@@ -95,7 +99,7 @@ evaluation_result = EvaluateOptimizationResult(scheme_dir, task_id);
 if evaluation_result.success
     flag = LoadEFOptimumAndRefine(scheme_dir);
     if flag
-        PlotEFBoxesAndTrueSweptArea();
+        %PlotEFBoxesAndTrueSweptArea();
         %PlotTrueVehicleSweptAreaOnly();
         %Final_Viusalize_withplot();
     else

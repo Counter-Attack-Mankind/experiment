@@ -28,6 +28,10 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 global params
 task_id = 21;
+batch_task_id = str2double(getenv('EXPERIMENT_TASK_ID'));
+if isfinite(batch_task_id) && batch_task_id >= 1
+    task_id = round(batch_task_id);
+end
 params.task_id = task_id;
 run_paths = PrepareStrategyRunFolders(scheme_dir, task_id);
 InitializeParams();
@@ -72,7 +76,7 @@ fprintf('NLP model      : %s\n', nlp_file);
 fprintf('AMPL log file  : %s\n', ampl_log_file);
 
 % 当前工作目录已经是 Scheme4
-cmd = sprintf('"%s" rr4.run', ampl_exe);
+cmd = sprintf('"%s" "%s"', ampl_exe, rr_file);
 [ampl_status, ampl_output] = system(cmd);
 
 fprintf('%s\n', ampl_output);

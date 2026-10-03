@@ -12,14 +12,14 @@ function modify_target(file_path)
     % ===== 3. 修改变量 =====
 
     % 起点
-    data.x0 = 5;
-    data.y0 = 5;
-    data.theta0 = -2;
+    %data.x0 = 13;
+    %data.y0 = 7;
+    %data.theta0 = 0;
 
     % 终点
-    %data.xf = 1.5;
-    %data.yf = 16;
-    %data.thetaf = -1.57;
+    data.xf = 20;
+    data.yf = 12.5;
+    %data.thetaf = 1.57;
 
     % ===== 4. 覆盖保存 =====
     save(file_path, '-struct', 'data');

@@ -40,6 +40,7 @@ w_max = params.vehicle.w_max;
 %========================
 dt     = time;                  % Nfe-1
 kappa  = tan(phy(1:Nfe-1)) / lw;
+kappa_abs = sqrt(kappa.^2 + 1e-8);
 
 s      = zeros(Nfe-1,1);
 splus  = zeros(Nfe-1,1);
@@ -93,6 +94,7 @@ phy(Nfe) = 0;
 
 % 首末端修正后，重新计算区间曲率
 kappa = tan(phy(1:Nfe-1)) / lw;
+kappa_abs = sqrt(kappa.^2 + 1e-8);
 
 %========================
 % 区间量：1..Nfe-1
@@ -106,8 +108,8 @@ for ii = 1:(Nfe-1)
     sp = splus(ii);
     sm = sminus(ii);
 
-    up(ii)   = sp + hlb * abs(kk) * sp;
-    down(ii) = sm + hlb * abs(kk) * sm;
+    up(ii)   = sp + hlb * kappa_abs(ii) * sp;
+    down(ii) = sm + hlb * kappa_abs(ii) * sm;
 
     left(ii) = max(-lr * kk * sp, (LF + 0.5 * sp) * kk * sp) ...
              + max(-LF * kk * sm, (lr + 0.5 * sm) * kk * sm);
@@ -289,6 +291,7 @@ data.dt     = dt;
 data.tf     = sum(dt);
 
 data.kappa  = kappa;
+data.kabs   = kappa_abs;
 data.s      = s;
 data.splus  = splus;
 data.sminus = sminus;
@@ -329,6 +332,10 @@ data.meta.obs      = params.environment.obs;
 data.meta.note     = 'Initial guess aligned with NLP1.mod';
 
 save('written_initial_guess_data.mat', 'data');
+
+% Use exactly the same OBCA data and dual initialization as Schemes 1/2.
+PrepareOBCAData('written_initial_guess_data.mat', 'ig.INIVAL', ...
+    'OBCAData.dat', 0.01);
 
 end
 

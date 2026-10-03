@@ -1,7 +1,9 @@
 param PV{i in 1..18};
 param Nobs := PV[16];
-param PPP{i in 1..Nobs, j in 1..4, k in 1..2};
-param Area{i in 1..Nobs};
+param Nedge{i in 1..Nobs} integer >= 3 <= 4;
+param ObsA{i in 1..Nobs, e in 1..4, d in 1..2} default 0;
+param Obsb{i in 1..Nobs, e in 1..4} default 0;
+param dmin > 0;
 param Nfe := PV[7];
 
 var tf >= 0;
@@ -22,6 +24,11 @@ var CY{i in 1..Nfe-1};
 var DX{i in 1..Nfe-1};
 var DY{i in 1..Nfe-1};
 var dt{i in 1..Nfe-1} >= 0;
+
+var obca_lambda{i in 2..Nfe-1, n in 1..Nobs, e in 1..4} >= 0;
+var obca_mu{i in 2..Nfe-1, n in 1..Nobs, r in 1..4} >= 0;
+var obca_qx{i in 2..Nfe-1, n in 1..Nobs};
+var obca_qy{i in 2..Nfe-1, n in 1..Nobs};
 
 param v_max := PV[8];
 param phy_max := PV[9];
@@ -85,19 +92,35 @@ s.t. Bounds_BY{i in 1..Nfe-1}: 0 <= BY[i] <= 30;
 s.t. Bounds_CY{i in 1..Nfe-1}: 0 <= CY[i] <= 30;
 s.t. Bounds_DY{i in 1..Nfe-1}: 0 <= DY[i] <= 30;
 
-s.t. eq_PPPoutsideBODY {i in 2..Nfe-1, nn in 1..Nobs, jj in 1..4}:
-(abs((AX[i] - PPP[nn,jj,1])*(BY[i] - PPP[nn,jj,2]) - (AY[i] - PPP[nn,jj,2])*(BX[i] - PPP[nn,jj,1])) * 0.5 + abs((BX[i] - PPP[nn,jj,1])*(CY[i] - PPP[nn,jj,2]) - (BY[i] - PPP[nn,jj,2])*(CX[i] - PPP[nn,jj,1])) * 0.5 + abs((CX[i] - PPP[nn,jj,1])*(DY[i] - PPP[nn,jj,2]) - (CY[i] - PPP[nn,jj,2])*(DX[i] - PPP[nn,jj,1])) * 0.5 + abs((DX[i] - PPP[nn,jj,1])*(AY[i] - PPP[nn,jj,2]) - (DY[i] - PPP[nn,jj,2])*(AX[i] - PPP[nn,jj,1])) * 0.5) >= body_area + 0.1;
+# OBCA: exact Euclidean separation of the convex vehicle rectangle and obstacle.
+s.t. OBCA_qx_def {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_qx[i,n] = sum {e in 1..Nedge[n]} ObsA[n,e,1]*obca_lambda[i,n,e];
 
-s.t. eq_AoutsideOBSTACLE {i in 2..Nfe-1, nn in 1..Nobs}:
-(abs((PPP[nn,1,1] - AX[i])*(PPP[nn,2,2] - AY[i]) - (PPP[nn,1,2] - AY[i])*(PPP[nn,2,1] - AX[i])) * 0.5 + abs((PPP[nn,2,1] - AX[i])*(PPP[nn,3,2] - AY[i]) - (PPP[nn,2,2] - AY[i])*(PPP[nn,3,1] - AX[i])) * 0.5 + abs((PPP[nn,3,1] - AX[i])*(PPP[nn,4,2] - AY[i]) - (PPP[nn,3,2] - AY[i])*(PPP[nn,4,1] - AX[i])) * 0.5 + abs((PPP[nn,4,1] - AX[i])*(PPP[nn,1,2] - AY[i]) - (PPP[nn,4,2] - AY[i])*(PPP[nn,1,1] - AX[i])) * 0.5) >= Area[nn];
-s.t. eq_BoutsideOBSTACLE {i in 2..Nfe-1, nn in 1..Nobs}:
-(abs((PPP[nn,1,1] - BX[i])*(PPP[nn,2,2] - BY[i]) - (PPP[nn,1,2] - BY[i])*(PPP[nn,2,1] - BX[i])) * 0.5 + abs((PPP[nn,2,1] - BX[i])*(PPP[nn,3,2] - BY[i]) - (PPP[nn,2,2] - BY[i])*(PPP[nn,3,1] - BX[i])) * 0.5 + abs((PPP[nn,3,1] - BX[i])*(PPP[nn,4,2] - BY[i]) - (PPP[nn,3,2] - BY[i])*(PPP[nn,4,1] - BX[i])) * 0.5 + abs((PPP[nn,4,1] - BX[i])*(PPP[nn,1,2] - BY[i]) - (PPP[nn,4,2] - BY[i])*(PPP[nn,1,1] - BX[i])) * 0.5) >= Area[nn];
-s.t. eq_CoutsideOBSTACLE {i in 2..Nfe-1, nn in 1..Nobs}:
-(abs((PPP[nn,1,1] - CX[i])*(PPP[nn,2,2] - CY[i]) - (PPP[nn,1,2] - CY[i])*(PPP[nn,2,1] - CX[i])) * 0.5 + abs((PPP[nn,2,1] - CX[i])*(PPP[nn,3,2] - CY[i]) - (PPP[nn,2,2] - CY[i])*(PPP[nn,3,1] - CX[i])) * 0.5 + abs((PPP[nn,3,1] - CX[i])*(PPP[nn,4,2] - CY[i]) - (PPP[nn,3,2] - CY[i])*(PPP[nn,4,1] - CX[i])) * 0.5 + abs((PPP[nn,4,1] - CX[i])*(PPP[nn,1,2] - CY[i]) - (PPP[nn,4,2] - CY[i])*(PPP[nn,1,1] - CX[i])) * 0.5) >= Area[nn];
-s.t. eq_DoutsideOBSTACLE {i in 2..Nfe-1, nn in 1..Nobs}:
-(abs((PPP[nn,1,1] - DX[i])*(PPP[nn,2,2] - DY[i]) - (PPP[nn,1,2] - DY[i])*(PPP[nn,2,1] - DX[i])) * 0.5 + abs((PPP[nn,2,1] - DX[i])*(PPP[nn,3,2] - DY[i]) - (PPP[nn,2,2] - DY[i])*(PPP[nn,3,1] - DX[i])) * 0.5 + abs((PPP[nn,3,1] - DX[i])*(PPP[nn,4,2] - DY[i]) - (PPP[nn,3,2] - DY[i])*(PPP[nn,4,1] - DX[i])) * 0.5 + abs((PPP[nn,4,1] - DX[i])*(PPP[nn,1,2] - DY[i]) - (PPP[nn,4,2] - DY[i])*(PPP[nn,1,1] - DX[i])) * 0.5) >= Area[nn];
+s.t. OBCA_qy_def {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_qy[i,n] = sum {e in 1..Nedge[n]} ObsA[n,e,2]*obca_lambda[i,n,e];
+
+s.t. OBCA_distance {i in 2..Nfe-1, n in 1..Nobs}:
+    sum {e in 1..Nedge[n]}
+        (ObsA[n,e,1]*x[i] + ObsA[n,e,2]*y[i] - Obsb[n,e])
+        * obca_lambda[i,n,e]
+    - (LF*obca_mu[i,n,1] + lr*obca_mu[i,n,2]
+      + hlb*obca_mu[i,n,3] + hlb*obca_mu[i,n,4]) >= dmin;
+
+s.t. OBCA_dual_x {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_mu[i,n,1] - obca_mu[i,n,2]
+    + cos(theta[i])*obca_qx[i,n] + sin(theta[i])*obca_qy[i,n] = 0;
+
+s.t. OBCA_dual_y {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_mu[i,n,3] - obca_mu[i,n,4]
+    - sin(theta[i])*obca_qx[i,n] + cos(theta[i])*obca_qy[i,n] = 0;
+
+s.t. OBCA_unit_norm {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_qx[i,n]^2 + obca_qy[i,n]^2 <= 1;
+
+s.t. OBCA_inactive_lambda
+    {i in 2..Nfe-1, n in 1..Nobs, e in 1..4: e > Nedge[n]}:
+    obca_lambda[i,n,e] = 0;
 
 data;
 param PV := include PV_scheme4;
-param PPP := include PPP_scheme4;
-param Area := include Area_scheme4;
+include OBCAData_scheme4.dat;

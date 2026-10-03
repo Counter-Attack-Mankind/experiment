@@ -1,9 +1,12 @@
-#直接使用 max() 的 NLP.mod 文件
+#鐩存帴浣跨敤 max() 鐨?NLP.mod 鏂囦欢
 
+param kappa_smooth_eps := 1e-4;
 param PV{i in 1..18};
 param Nobs := PV[16];
-param PPP{i in 1..Nobs, j in 1..4, k in 1..2};
-param Area{i in 1..Nobs};
+param Nedge{i in 1..Nobs} integer >= 3 <= 4;
+param ObsA{i in 1..Nobs, e in 1..4, d in 1..2} default 0;
+param Obsb{i in 1..Nobs, e in 1..4} default 0;
+param dmin > 0;
 param Nfe := PV[7];
 
 #====================================
@@ -35,6 +38,11 @@ var left{i in 1..Nfe-1};
 var right{i in 1..Nfe-1};
 var k{i in 1..Nfe-1};
 
+var obca_lambda{i in 2..Nfe-1, n in 1..Nobs, e in 1..4} >= 0;
+var obca_mu{i in 2..Nfe-1, n in 1..Nobs, r in 1..4} >= 0;
+var obca_qx{i in 2..Nfe-1, n in 1..Nobs};
+var obca_qy{i in 2..Nfe-1, n in 1..Nobs};
+
 #============================================
 param a_max := PV[10];
 param v_max := PV[8];
@@ -49,22 +57,22 @@ param lb := hlb * 2;
 param max_dt := PV[17];
 param min_dt := PV[18];
 
-#==============（时间约束）============
+#==============锛堟椂闂寸害鏉燂級============
 s.t. define_tf: tf = sum{i in 1..Nfe-1} dt[i];
 s.t. time_bound1{i in 1..Nfe-1}: min_dt <= dt[i] <= max_dt;
 s.t. time_bound2: tf <= 35;
 
-# ============（代价函数）=================
+# ============锛堜唬浠峰嚱鏁帮級=================
 minimize objective_: sum {i in 1..Nfe-1} dt[i]^2;
 
-#===========（车辆动力学约束）===============
+#===========锛堣溅杈嗗姩鍔涘绾︽潫锛?==============
 s.t. DIFF_dxdt{i in 1..Nfe-1}: x[i+1] = x[i] + v[i]*dt[i]*cos(theta[i]);
 s.t. DIFF_dydt{i in 1..Nfe-1}: y[i+1] = y[i] + v[i]*dt[i]*sin(theta[i]);
 s.t. DIFF_dvdt{i in 1..Nfe-1}: v[i+1] = v[i] + dt[i]*a[i];
 s.t. DIFF_dthetadt{i in 1..Nfe-1}: theta[i+1] = theta[i] + dt[i]*v[i]*tan(phy[i])/lw;
 s.t. DIFF_dphydt{i in 1..Nfe-1}: phy[i+1] = phy[i] + dt[i]*w[i];
 
-# =============（车体边界约束）==============
+# =============锛堣溅浣撹竟鐣岀害鏉燂級==============
 s.t. Bounds_AX{i in 1..Nfe-1}: 0 <= AX[i] <= 30;
 s.t. Bounds_BX{i in 1..Nfe-1}: 0 <= BX[i] <= 30;
 s.t. Bounds_CX{i in 1..Nfe-1}: 0 <= CX[i] <= 30;
@@ -74,23 +82,23 @@ s.t. Bounds_BY{i in 1..Nfe-1}: 0 <= BY[i] <= 30;
 s.t. Bounds_CY{i in 1..Nfe-1}: 0 <= CY[i] <= 30;
 s.t. Bounds_DY{i in 1..Nfe-1}: 0 <= DY[i] <= 30;
 
-# =============（具身足迹相关变量）=====================
+# =============锛堝叿韬冻杩圭浉鍏冲彉閲忥級=====================
 s.t. define_kappa{i in 1..Nfe-1}: k[i] = tan(phy[i])/lw;
 s.t. define_s{i in 1..Nfe-1}: s[i] = v[i]*dt[i];
 
-# 原始非光滑 splus / sminus
+# 鍘熷闈炲厜婊?splus / sminus
 s.t. define_splus{i in 1..Nfe-1}:
     splus[i] = max(s[i], 0);
 
 s.t. define_sminus{i in 1..Nfe-1}:
     sminus[i] = max(-s[i], 0);
 
-# 具身足迹外扩尺度
+# 鍏疯韩瓒宠抗澶栨墿灏哄害
 s.t. define_up{i in 1..Nfe-1}:
-    up[i] = splus[i] + hlb*abs(k[i])*splus[i];
+    up[i] = splus[i] + hlb*sqrt(k[i]^2 + kappa_smooth_eps^2)*splus[i];
 
 s.t. define_down{i in 1..Nfe-1}:
-    down[i] = sminus[i] + hlb*abs(k[i])*sminus[i];
+    down[i] = sminus[i] + hlb*sqrt(k[i]^2 + kappa_smooth_eps^2)*sminus[i];
 
 s.t. define_left{i in 1..Nfe-1}:
     left[i] = max(-lr*k[i]*splus[i],(LF + 0.5*splus[i])*k[i]*splus[i])
@@ -100,7 +108,7 @@ s.t. define_right{i in 1..Nfe-1}:
     right[i] = max(lr*k[i]*splus[i],-(LF + 0.5*splus[i])*k[i]*splus[i])
              + max(LF*k[i]*sminus[i],-(lr + 0.5*sminus[i])*k[i]*sminus[i]);
 
-#================（两点边值约束）================
+#================锛堜袱鐐硅竟鍊肩害鏉燂級================
 s.t. Init_X:
 x[1] = PV[1];
 s.t. Init_Y:
@@ -131,7 +139,7 @@ phy[Nfe] = 0;
 s.t. End_v:
 v[Nfe] = 0;
 
-#==============（车辆动力学约束）======
+#==============锛堣溅杈嗗姩鍔涘绾︽潫锛?=====
 s.t. Bonds_v {i in {1..Nfe}}:
 -v_max <= v[i] <= v_max;
 s.t. Bonds_a {i in {1..Nfe}}:
@@ -141,27 +149,27 @@ s.t. Bonds_phy {i in {1..Nfe}}:
 s.t. Bonds_w {i in {1..Nfe}}:
 -w_max <= w[i] <= w_max;
 
-#=================（具身三约束）===========
-# 具身足迹有效转角限制
+#=================锛堝叿韬笁绾︽潫锛?==========
+# 鍏疯韩瓒宠抗鏈夋晥杞闄愬埗
 s.t. EF_arc_bound{i in {1..(Nfe-1)}}:
-    abs(k[i]) * (splus[i] + sminus[i]) <= 1.5708;
+    sqrt(k[i]^2 + kappa_smooth_eps^2) * (splus[i] + sminus[i]) <= 1.5708;
 
-# 前进条件1
+# 鍓嶈繘鏉′欢1
 s.t. EF_forward_cond1{i in {1..(Nfe-1)}}:
-    (1 + hlb * abs(k[i])) * tan(abs(k[i]) * splus[i]) <= lr * abs(k[i]);
-# 前进条件2
+    (1 + hlb * sqrt(k[i]^2 + kappa_smooth_eps^2)) * tan(sqrt(k[i]^2 + kappa_smooth_eps^2) * splus[i]) <= lr * sqrt(k[i]^2 + kappa_smooth_eps^2);
+# 鍓嶈繘鏉′欢2
 s.t. EF_forward_cond2{i in {1..(Nfe-1)}}:
-    abs(k[i]) * LF * tan(abs(k[i]) * splus[i]) <= 1 + hlb * abs(k[i]);
+    sqrt(k[i]^2 + kappa_smooth_eps^2) * LF * tan(sqrt(k[i]^2 + kappa_smooth_eps^2) * splus[i]) <= 1 + hlb * sqrt(k[i]^2 + kappa_smooth_eps^2);
 
-# 倒车条件1
+# 鍊掕溅鏉′欢1
 s.t. EF_reverse_cond1{i in {1..(Nfe-1)}}:
-    (1 + hlb * abs(k[i])) * tan(abs(k[i]) * sminus[i]) <= LF * abs(k[i]);
-# 倒车条件2
+    (1 + hlb * sqrt(k[i]^2 + kappa_smooth_eps^2)) * tan(sqrt(k[i]^2 + kappa_smooth_eps^2) * sminus[i]) <= LF * sqrt(k[i]^2 + kappa_smooth_eps^2);
+# 鍊掕溅鏉′欢2
 s.t. EF_reverse_cond2{i in {1..(Nfe-1)}}:
-    abs(k[i]) * lr * tan(abs(k[i]) * sminus[i]) <= 1 + hlb * abs(k[i]);
+    sqrt(k[i]^2 + kappa_smooth_eps^2) * lr * tan(sqrt(k[i]^2 + kappa_smooth_eps^2) * sminus[i]) <= 1 + hlb * sqrt(k[i]^2 + kappa_smooth_eps^2);
 
 
-#=============（具身盒子顶点的计算）=====================
+#=============锛堝叿韬洅瀛愰《鐐圭殑璁＄畻锛?====================
 s.t. RELATIONSHIP_AX{i in {1..(Nfe-1)}}:
     AX[i] = x[i] + (LF + up[i]) * cos(theta[i]) - (hlb + left[i]) * sin(theta[i]);
 s.t. RELATIONSHIP_BX{i in {1..(Nfe-1)}}:
@@ -180,24 +188,38 @@ s.t. RELATIONSHIP_DY{i in {1..(Nfe-1)}}:
     DY[i] = y[i] - (lr + down[i]) * sin(theta[i]) + (hlb + left[i]) * cos(theta[i]);
 
 
-#===================（避障约束，使用三角面积法）=====================================
-s.t. eq_PPPoutsideABCD {i in {2..(Nfe-1)}, nn in {1..Nobs}, jj in {1..4}}:
-(abs((AX[i] - PPP[nn,jj,1])*(BY[i] - PPP[nn,jj,2]) - (AY[i] - PPP[nn,jj,2])*(BX[i] - PPP[nn,jj,1])) * 0.5 + abs((BX[i] - PPP[nn,jj,1])*(CY[i] - PPP[nn,jj,2]) - (BY[i] - PPP[nn,jj,2])*(CX[i] - PPP[nn,jj,1])) * 0.5 + abs((CX[i] - PPP[nn,jj,1])*(DY[i] - PPP[nn,jj,2]) - (CY[i] - PPP[nn,jj,2])*(DX[i] - PPP[nn,jj,1])) * 0.5 + abs((DX[i] - PPP[nn,jj,1])*(AY[i] - PPP[nn,jj,2]) - (DY[i] - PPP[nn,jj,2])*(AX[i] - PPP[nn,jj,1])) * 0.5) >= (LF + lr + up[i] + down[i]) * (lb + right[i] + left[i]) + 0.1;
+#===================锛堥伩闅滅害鏉燂紝浣跨敤涓夎闈㈢Н娉曪級=====================================
+# OBCA: exact Euclidean separation of the convex vehicle rectangle and obstacle.
+s.t. OBCA_qx_def {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_qx[i,n] = sum {e in 1..Nedge[n]} ObsA[n,e,1]*obca_lambda[i,n,e];
 
-s.t. eq_AoutsidePRECTANGLEPPP {i in {2..(Nfe-1)}, nn in {1..Nobs}}:
-(abs((PPP[nn,1,1] - AX[i])*(PPP[nn,2,2] - AY[i]) - (PPP[nn,1,2] - AY[i])*(PPP[nn,2,1] - AX[i])) * 0.5 + abs((PPP[nn,2,1] - AX[i])*(PPP[nn,3,2] - AY[i]) - (PPP[nn,2,2] - AY[i])*( PPP[nn,3,1] - AX[i])) * 0.5 + abs((PPP[nn,3,1] - AX[i])*( PPP[nn,4,2] - AY[i]) - (PPP[nn,3,2] - AY[i])*( PPP[nn,4,1] - AX[i])) * 0.5 + abs((PPP[nn,4,1] - AX[i])*( PPP[nn,1,2] - AY[i]) - (PPP[nn,4,2] - AY[i])*( PPP[nn,1,1] - AX[i])) * 0.5) >= Area[nn];
+s.t. OBCA_qy_def {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_qy[i,n] = sum {e in 1..Nedge[n]} ObsA[n,e,2]*obca_lambda[i,n,e];
 
-s.t. eq_BoutsidePRECTANGLEPPP {i in {2..(Nfe-1)}, nn in {1..Nobs}}:
-(abs((PPP[nn,1,1] - BX[i])*(PPP[nn,2,2] - BY[i]) - (PPP[nn,1,2] - BY[i])*(PPP[nn,2,1] - BX[i])) * 0.5 + abs((PPP[nn,2,1] - BX[i])*(PPP[nn,3,2] - BY[i]) - (PPP[nn,2,2] - BY[i])*( PPP[nn,3,1] - BX[i])) * 0.5 + abs((PPP[nn,3,1] - BX[i])*( PPP[nn,4,2] - BY[i]) - (PPP[nn,3,2] - BY[i])*( PPP[nn,4,1] - BX[i])) * 0.5 + abs((PPP[nn,4,1] - BX[i])*( PPP[nn,1,2] - BY[i]) - (PPP[nn,4,2] - BY[i])*( PPP[nn,1,1] - BX[i])) * 0.5) >= Area[nn];
+s.t. OBCA_distance {i in 2..Nfe-1, n in 1..Nobs}:
+    sum {e in 1..Nedge[n]}
+        (ObsA[n,e,1]*x[i] + ObsA[n,e,2]*y[i] - Obsb[n,e])
+        * obca_lambda[i,n,e]
+    - ((LF + up[i])*obca_mu[i,n,1]
+      + (lr + down[i])*obca_mu[i,n,2]
+      + (hlb + left[i])*obca_mu[i,n,3]
+      + (hlb + right[i])*obca_mu[i,n,4]) >= dmin;
 
-s.t. eq_CoutsidePRECTANGLEPPP {i in {2..(Nfe-1)}, nn in {1..Nobs}}:
-(abs((PPP[nn,1,1] - CX[i])*(PPP[nn,2,2] - CY[i]) - (PPP[nn,1,2] - CY[i])*(PPP[nn,2,1] - CX[i])) * 0.5 + abs((PPP[nn,2,1] - CX[i])*(PPP[nn,3,2] - CY[i]) - (PPP[nn,2,2] - CY[i])*( PPP[nn,3,1] - CX[i])) * 0.5 + abs((PPP[nn,3,1] - CX[i])*( PPP[nn,4,2] - CY[i]) - (PPP[nn,3,2] - CY[i])*( PPP[nn,4,1] - CX[i])) * 0.5 + abs((PPP[nn,4,1] - CX[i])*( PPP[nn,1,2] - CY[i]) - (PPP[nn,4,2] - CY[i])*( PPP[nn,1,1] - CX[i])) * 0.5) >= Area[nn];
+s.t. OBCA_dual_x {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_mu[i,n,1] - obca_mu[i,n,2]
+    + cos(theta[i])*obca_qx[i,n] + sin(theta[i])*obca_qy[i,n] = 0;
 
-s.t. eq_DoutsidePRECTANGLEPPP {i in {2..(Nfe-1)}, nn in {1..Nobs}}:
-(abs((PPP[nn,1,1] - DX[i])*(PPP[nn,2,2] - DY[i]) - (PPP[nn,1,2] - DY[i])*(PPP[nn,2,1] - DX[i])) * 0.5 + abs((PPP[nn,2,1] - DX[i])*(PPP[nn,3,2] - DY[i]) - (PPP[nn,2,2] - DY[i])*( PPP[nn,3,1] - DX[i])) * 0.5 + abs((PPP[nn,3,1] - DX[i])*( PPP[nn,4,2] - DY[i]) - (PPP[nn,3,2] - DY[i])*( PPP[nn,4,1] - DX[i])) * 0.5 + abs((PPP[nn,4,1] - DX[i])*( PPP[nn,1,2] - DY[i]) - (PPP[nn,4,2] - DY[i])*( PPP[nn,1,1] - DX[i])) * 0.5) >= Area[nn];
+s.t. OBCA_dual_y {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_mu[i,n,3] - obca_mu[i,n,4]
+    - sin(theta[i])*obca_qx[i,n] + cos(theta[i])*obca_qy[i,n] = 0;
 
-#==================（加载数据）=============================
+s.t. OBCA_unit_norm {i in 2..Nfe-1, n in 1..Nobs}:
+    obca_qx[i,n]^2 + obca_qy[i,n]^2 <= 1;
+
+s.t. OBCA_inactive_lambda
+    {i in 2..Nfe-1, n in 1..Nobs, e in 1..4: e > Nedge[n]}:
+    obca_lambda[i,n,e] = 0;
+
 data;
 param PV := include PV;
-param PPP := include PPP;
-param Area := include Area;
+include OBCAData.dat;

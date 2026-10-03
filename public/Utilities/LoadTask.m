@@ -7,8 +7,8 @@ current_dir = fileparts(mfilename('fullpath'));
 % 项目根目录（上一级）
 project_root = fileparts(current_dir);
 % 数据目录
-data_dir = fullfile(project_root, 'Environment', 'real');
-%data_dir = fullfile(project_root, 'Environment', 'Data_test\real');
+%data_dir = fullfile(project_root, 'Environment', 'real');
+data_dir = fullfile(project_root, 'Environment', 'Data_test');
 % 构造文件路径
 file_path = fullfile(data_dir, [num2str(task_id), '.mat']);
 % 检查文件是否存在

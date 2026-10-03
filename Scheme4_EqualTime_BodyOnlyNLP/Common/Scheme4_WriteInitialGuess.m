@@ -43,6 +43,10 @@ data.meta = struct('Nfe', Nfe, ...
     'note', 'scheme4 body-only initial guess');
 save('written_initial_guess_data_scheme4.mat', 'data');
 
+% Scheme 4 applies OBCA to the physical body at its equal-time nodes.
+PrepareOBCAData('written_initial_guess_data_scheme4.mat', ...
+    'ig_scheme4.INIVAL', 'OBCAData_scheme4.dat', 0.01);
+
 fprintf('\n========== Plan 1 Initial Guess Written ==========\n');
 fprintf('Nfe       : %d\n', Nfe);
 fprintf('tf        : %.6f\n', sum(dt));
