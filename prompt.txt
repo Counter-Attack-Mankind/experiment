@@ -8,3 +8,18 @@
 3. 并依次运行scheme1，scheme2，scheme3，scheme4.每个scheme都运行的案例是在public\Environment\real下，一共有12个案例，所以一共会每个方案下分别得到12个结果，包括ampl.log，/results等，并且有四个汇总指标表格。
 4. 要求你比较它们是否符合我的实验预期。若不是请分析原因，是否我哪里代码设置有误，特别是我在比较scheme3和scheme1效果并不明显，请你仔细查找相关原因
 
+
+1.目前scheme1-4的NLP.mod文件存在乱码，请你修复
+
+3.再次检查scheme1-4，确定我消融实验和论文之间的设计无误，若有问题请指出，交给我具体审查，目前不要擅自修改
+
+2.目前是每个scheme下存放以.csv存放结果，我希望直接存放在experiment\下，统一记录在results.csv下。
+其中每个scheme应该，纵行是task_id，横行为是否求解成功，cpu计算时间，碰撞占比(以数字类型记录，保留有效小数点两位)。
+假定task有10个，那么results.csv下应有11行（表格名称1行+各个id10行）*4列（task_id + sucesss + ipopt_cpu_time + collision percent）
+那么有scheme1-4，则有11*4个结果*4，每个11*4为一个scheme，每个scheme结果空一列，形成11行*（4+1+4+1+4+1+4=19列），意思如上，若表述有误，请你勘正
+
+3.写一个脚本，使我能运行该脚本，就能一键运行scheme1-scheme4，每个scheme完成所有task_id并且记录
+
+4.目前scheme中PlotEFBoxesAndTrueSweptArea()和PlotTrueVehicleSweptAreaOnly()生成图片的位置请更改，以scheme1为例，在其目录下新建文件夹
+分别命名为\EFboxs_photo和\vehiclesbody_photo，图片以task_id命名，PlotEFBoxesAndTrueSweptArea()图片统一存放到\EFboxs_photo，
+PlotTrueVehicleSweptAreaOnly()统一存放到\vehiclesbody_photo

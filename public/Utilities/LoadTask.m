@@ -8,7 +8,15 @@ current_dir = fileparts(mfilename('fullpath'));
 project_root = fileparts(current_dir);
 % 数据目录
 %data_dir = fullfile(project_root, 'Environment', 'real');
-data_dir = fullfile(project_root, 'Environment', 'Data_test');
+task_source = strtrim(getenv('EXPERIMENT_TASK_SOURCE'));
+if isempty(task_source)
+    task_source = 'Data_test';
+end
+if ~any(strcmpi(task_source, {'real','Data_test'}))
+    error('LoadTask:InvalidSource', ...
+        'EXPERIMENT_TASK_SOURCE must be real or Data_test, not %s.',task_source);
+end
+data_dir = fullfile(project_root,'Environment',task_source);
 % 构造文件路径
 file_path = fullfile(data_dir, [num2str(task_id), '.mat']);
 % 检查文件是否存在
@@ -19,8 +27,6 @@ end
 load(file_path);
 
 
-data_dir = fullfile(project_root, 'Environment', 'Data_test');
-file_path = fullfile(data_dir, [num2str(task_id), '.mat']);
 params.environment.obs = obs;   % 存储障碍物顶点坐标（多边形）
 params.task.x0 = x0;
 params.task.y0 = y0;

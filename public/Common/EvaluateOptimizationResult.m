@@ -10,7 +10,8 @@ task_id = round(task_id);
 runtime_dir = fullfile(scheme_dir, 'runtime');
 result_root = fullfile(scheme_dir,'Results',sprintf('task_%02d', task_id));
 log_file = fullfile(result_root, 'ampl_log.txt');
-output_csv = fullfile(scheme_dir, 'EvaluationResults.csv');
+experiment_root = fileparts(scheme_dir);
+output_csv = fullfile(experiment_root, 'results.csv');
 
 %% ============================================================
 % 2. 初始化结果
@@ -44,9 +45,9 @@ end
 % 4. 若优化成功，计算 CPU 时间和碰撞百分比
 % ============================================================
 
-if result.success == 1
+result.ipopt_cpu_sec = parseIpoptCpuTime(log_file);
 
-    result.ipopt_cpu_sec = parseIpoptCpuTime(log_file);
+if result.success == 1
 
     x = readRequiredVector(runtime_dir, 'x.txt');
     y = readRequiredVector(runtime_dir, 'y.txt');
@@ -127,7 +128,7 @@ if result.success == 1
 
 else
 
-    fprintf('IPOPT CPU time         : NaN\n');
+    fprintf('IPOPT CPU time         : %.6f s\n',result.ipopt_cpu_sec);
     fprintf('collision percent      : NaN\n');
 
 end
@@ -136,10 +137,10 @@ fprintf('=============================================\n\n');
 
 
 %% ============================================================
-% 6. 更新 Scheme 级 EvaluationResults.csv
+% 6. Update the root-level unified results.csv.
 % ============================================================
 
-updateEvaluationTable(output_csv, result);
+UpdateUnifiedResults(output_csv, scheme_dir, result);
 
 end
 
@@ -500,65 +501,3 @@ axes_out = axes_out(1:valid_count, :);
 end
 
 
-%% ========================================================================
-% Local Function 9
-% 更新 Scheme 根目录下的 EvaluationResults.csv
-% ========================================================================
-function updateEvaluationTable(output_csv, result)
-
-new_row = table( ...
-    result.task_id, ...
-    result.success, ...
-    result.ipopt_cpu_sec, ...
-    result.collision_percent, ...
-    'VariableNames', { ...
-        'task_id', ...
-        'success', ...
-        'ipopt_cpu_sec', ...
-        'collision_percent'});
-
-if exist(output_csv, 'file') == 2
-
-    T = readtable(output_csv);
-
-    required_names = { ...
-        'task_id', ...
-        'success', ...
-        'ipopt_cpu_sec', ...
-        'collision_percent'};
-
-    if ~all(ismember(required_names, T.Properties.VariableNames))
-        error( ...
-            'EvaluateOptimizationResult:InvalidTable', ...
-            'Existing evaluation table has incompatible columns: %s', ...
-            output_csv);
-    end
-
-    idx = find(T.task_id == result.task_id, 1);
-
-    if isempty(idx)
-
-        % 新任务，追加
-        T = [T; new_row];
-
-    else
-
-        % 已有任务，覆盖
-        T(idx, :) = new_row;
-
-    end
-
-else
-
-    T = new_row;
-
-end
-
-% task_id 升序排列
-T = sortrows(T, 'task_id');
-
-writetable(T, output_csv);
-
-fprintf('Evaluation table updated: %s\n', output_csv);
-
-end

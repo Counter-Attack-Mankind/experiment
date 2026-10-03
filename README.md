@@ -27,3 +27,13 @@
 **验证缓冲避障模型**
 
 `Original Hybrid A*` + `matched-Nfe equal-time initialization` + `body-only NLP`
+
+
+一键运行schem1-scheme4脚本文件
+.\RunAllSchemes.bat
+
+中断后继续运行
+.\RunAllSchemes.bat -Resume
+
+只初始化results.csv
+.\RunAllSchemes.bat -InitializeOnly

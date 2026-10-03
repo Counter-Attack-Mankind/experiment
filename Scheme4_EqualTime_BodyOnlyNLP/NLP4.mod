@@ -1,3 +1,5 @@
+# Scheme 4 NLP: equal-time physical-body constraints with OBCA.
+
 param PV{i in 1..18};
 param Nobs := PV[16];
 param Nedge{i in 1..Nobs} integer >= 3 <= 4;
@@ -6,6 +8,7 @@ param Obsb{i in 1..Nobs, e in 1..4} default 0;
 param dmin > 0;
 param Nfe := PV[7];
 
+# State and control variables.
 var tf >= 0;
 var x{i in 1..Nfe};
 var y{i in 1..Nfe};
@@ -25,6 +28,7 @@ var DX{i in 1..Nfe-1};
 var DY{i in 1..Nfe-1};
 var dt{i in 1..Nfe-1} >= 0;
 
+# OBCA dual variables.
 var obca_lambda{i in 2..Nfe-1, n in 1..Nobs, e in 1..4} >= 0;
 var obca_mu{i in 2..Nfe-1, n in 1..Nobs, r in 1..4} >= 0;
 var obca_qx{i in 2..Nfe-1, n in 1..Nobs};
@@ -42,18 +46,21 @@ param max_dt := PV[17];
 param min_dt := PV[18];
 param body_area := (LF + lr) * (2 * hlb);
 
+# Time constraints and objective.
 s.t. define_tf: tf = sum{i in 1..Nfe-1} dt[i];
 s.t. time_bound1{i in 1..Nfe-1}: min_dt <= dt[i] <= max_dt;
 s.t. time_bound2: tf <= 35;
 
 minimize objective_: sum {i in 1..Nfe-1} dt[i]^2;
 
+# Discrete vehicle dynamics.
 s.t. DIFF_dxdt{i in 1..Nfe-1}: x[i+1] = x[i] + v[i]*dt[i]*cos(theta[i]);
 s.t. DIFF_dydt{i in 1..Nfe-1}: y[i+1] = y[i] + v[i]*dt[i]*sin(theta[i]);
 s.t. DIFF_dvdt{i in 1..Nfe-1}: v[i+1] = v[i] + dt[i]*a[i];
 s.t. DIFF_dthetadt{i in 1..Nfe-1}: theta[i+1] = theta[i] + dt[i]*v[i]*tan(phy[i])/lw;
 s.t. DIFF_dphydt{i in 1..Nfe-1}: phy[i+1] = phy[i] + dt[i]*w[i];
 
+# Boundary conditions and variable bounds.
 s.t. Init_X: x[1] = PV[1];
 s.t. Init_Y: y[1] = PV[2];
 s.t. Init_Theta: theta[1] = PV[3];
@@ -74,6 +81,7 @@ s.t. Bonds_a{i in 1..Nfe}: -a_max <= a[i] <= a_max;
 s.t. Bonds_phy{i in 1..Nfe}: -phy_max <= phy[i] <= phy_max;
 s.t. Bonds_w{i in 1..Nfe}: -w_max <= w[i] <= w_max;
 
+# Physical-body corner coordinates.
 s.t. RELATIONSHIP_AX{i in 1..Nfe-1}: AX[i] = x[i] + LF*cos(theta[i]) - hlb*sin(theta[i]);
 s.t. RELATIONSHIP_BX{i in 1..Nfe-1}: BX[i] = x[i] + LF*cos(theta[i]) + hlb*sin(theta[i]);
 s.t. RELATIONSHIP_CX{i in 1..Nfe-1}: CX[i] = x[i] - lr*cos(theta[i]) + hlb*sin(theta[i]);
