@@ -1,5 +1,5 @@
 %% ==== 加载工作区间与对应文件 ==========
-% 本文件是（原版混合A*+真实车身三角面积避障约束）
+% 本文件是（原版混合A*+真实车身OBCA避障约束）
 
 clear all; close all; clc;
 scheme_dir = fileparts(mfilename('fullpath'));  %获取当前运行的RunMe.m的完整路径 
