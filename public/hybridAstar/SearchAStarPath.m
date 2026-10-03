@@ -95,22 +95,7 @@ for ix = 1:params.ha.nx
     end
 end
 
-figure;
-imagesc(params.dialated_map');
-set(gca, 'YDir', 'normal');
-axis equal tight;
-colormap(gray);
-hold on;
 
-[vis_row, vis_col] = find(visited_map' > 0);
-plot(vis_col, vis_row, 'b.', 'MarkerSize', 4);
-
-plot(init_node(8), init_node(9), 'go', 'MarkerSize', 10, 'LineWidth', 2);
-plot(goal_ind(1), goal_ind(2), 'ro', 'MarkerSize', 10, 'LineWidth', 2);
-
-title('A* visited cells on dialated map');
-legend('visited', 'start', 'goal');
-%==============================================
 
 if (completeness_flag)
     ind_vec = goal_ind;
@@ -138,6 +123,22 @@ else
     x = [];
     y = [];
     theta = [];
+    
+    figure;
+    imagesc(params.dialated_map');
+    set(gca, 'YDir', 'normal');
+    axis equal tight;
+    colormap(gray);
+    hold on;
+
+    [vis_row, vis_col] = find(visited_map' > 0);
+    plot(vis_col, vis_row, 'b.', 'MarkerSize', 4);
+
+    plot(init_node(8), init_node(9), 'go', 'MarkerSize', 10, 'LineWidth', 2);
+    plot(goal_ind(1), goal_ind(2), 'ro', 'MarkerSize', 10, 'LineWidth', 2);
+
+    title('A* visited cells on dialated map');
+    legend('visited', 'start', 'goal');
 end
 end
 

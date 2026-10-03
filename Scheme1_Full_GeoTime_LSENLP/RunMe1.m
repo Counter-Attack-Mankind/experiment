@@ -36,7 +36,7 @@ params.io.scheme_dir = scheme_dir;
 params.io.task_id    = task_id;
 %% ==== Hybrid A* ====
 
-params.ha.enable_debug_plot = 1;
+params.ha.enable_debug_plot = 0;
 params.ha.debug_plot_stride = 50;
 params.ha.sweep_scale = 0;
 params.visualize.show_ef_boxes = 1;

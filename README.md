@@ -26,7 +26,7 @@
 
 **验证缓冲避障模型**
 
-`Original Hybrid A*` + `matched-Nfe equal-time initialization` + `body-only NLP`
+`Original Hybrid A*` + `matched-Nfe initialization` + `body-only NLP`
 
 
 一键运行schem1-scheme4脚本文件
