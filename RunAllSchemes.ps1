@@ -16,8 +16,10 @@ $ErrorActionPreference = 'Stop'
 $experimentRoot = [System.IO.Path]::GetFullPath(
     (Split-Path -Parent $MyInvocation.MyCommand.Path))
 # Change only this value to switch the experiment data source.
+
 # $taskSource = 'Data_test'
-$taskSource = 'real'
+ $taskSource = 'real'
+
 $taskDirectory = Join-Path $experimentRoot "public\Environment\$taskSource"
 $resultsFile = Join-Path $experimentRoot 'results.csv'
 

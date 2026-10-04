@@ -49,7 +49,7 @@ params.ha.rs_try_interval = 20;
 params.ha.rs_sample_ds = 0.05;
 
 params.ha.max_iter = 20000;
-params.ha.max_search_time = 10.0;
+params.ha.max_search_time = 20.0;
 
 params.ha.enable_recording = 0;
 params.ha.iter_for_HA = 99000;
