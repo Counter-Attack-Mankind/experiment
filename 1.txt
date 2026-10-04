@@ -1,0 +1,507 @@
+请基于上一轮只读审查结果，对 experiment 仓库正式实施“新增 IPOPT 指标”功能。
+
+本轮允许修改代码。
+
+要求：
+1. 不修改四个实验 Scheme 的数学模型、初值算法或实验逻辑。
+2. 不重新运行 MATLAB / AMPL / IPOPT。
+3. 不修改已有 results1.csv、results2.csv ... 历史原始结果。
+4. 修改前理解全库依赖关系，所有固定列数/列偏移必须连锁修改。
+5. 完成后进行静态检查和对已有日志的离线解析验证。
+6. 禁止因为修改统计功能而改变任何已有实验结果。
+
+==================================================
+一、新增单次实验评价指标
+==================================================
+
+当前每个 scheme 记录：
+
+task_id
+success
+ipopt_cpu_time
+collision_percent
+
+修改为：
+
+task_id
+success
+inf_pr_0
+ipopt_iterations
+ipopt_cpu_time
+collision_percent
+
+其中：
+
+inf_pr_0：
+IPOPT iteration table 中 iteration 0 对应的 inf_pr。
+它表示 IPOPT 初始化/边界内部化后的 iteration-0 原始 primal
+constraint violation，不解释为到可行域的欧氏距离。
+
+ipopt_iterations：
+优先读取 IPOPT 最终汇总中的：
+
+Number of Iterations....:
+
+不要通过数 iteration table 行数得到。
+
+即使最终求解失败，只要日志完整：
+inf_pr_0、ipopt_iterations、ipopt_cpu_time 均应尽可能解析保存。
+
+collision_percent 仍只有在存在成功优化轨迹时计算。
+
+==================================================
+二、修改 EvaluateOptimizationResult.m
+==================================================
+
+文件：
+
+public/Common/EvaluateOptimizationResult.m
+
+新增：
+
+result.inf_pr_0 = NaN;
+result.ipopt_iterations = NaN;
+
+新增独立 local functions：
+
+parseInitialPrimalInfeasibility(log_file)
+parseIpoptIterationCount(log_file)
+
+要求：
+
+1. 与 parseIpoptCpuTime 同级。
+2. 无论 success=0 还是 success=1，都尝试解析日志。
+3. inf_pr_0 必须准确定位 IPOPT iteration 0，而不是匹配其他数字0。
+4. 支持科学计数法，例如：
+   1.30e+00
+   9.14e-01
+5. iteration count 优先匹配：
+   Number of Iterations
+6. 日志缺失或格式异常时返回 NaN 并 warning，不使整个评价崩溃。
+7. 保持现有 CPU 解析与 collision evaluation 不变。
+
+同时在控制台 Evaluation 输出中增加：
+
+initial primal infeasibility
+IPOPT iteration count
+
+==================================================
+三、results.csv 从 19 列迁移为 27 列
+==================================================
+
+每个 Scheme 六个字段：
+
+task_id
+success
+inf_pr_0
+ipopt_iterations
+ipopt_cpu_time
+collision_percent
+
+Scheme 间保留一个空列。
+
+完整位置：
+
+Scheme1：
+1 task
+2 success
+3 inf_pr_0
+4 iterations
+5 cpu
+6 collision
+7 blank
+
+Scheme2：
+8 task
+9 success
+10 inf_pr_0
+11 iterations
+12 cpu
+13 collision
+14 blank
+
+Scheme3：
+15 task
+16 success
+17 inf_pr_0
+18 iterations
+19 cpu
+20 collision
+21 blank
+
+Scheme4：
+22 task
+23 success
+24 inf_pr_0
+25 iterations
+26 cpu
+27 collision
+
+==================================================
+四、修改 UpdateUnifiedResults.m
+==================================================
+
+文件：
+
+public/Common/UpdateUnifiedResults.m
+
+完整检查并修改所有：
+
+19
+cell(0,19)
+cell(1,19)
+fields length
+column loop
+base_column
+headers
+column groups
+CSV formatting
+
+新的 block stride：
+
+7
+
+即：
+
+base_column = 1 + (scheme_index-1)*7
+
+要求：
+
+task_id、success、iterations：
+整数格式
+
+inf_pr_0：
+建议使用 %.8g 或科学计数格式，保证精度
+
+CPU：
+保持 %.6f
+
+collision：
+保持 %.2f
+
+同时把当前仅部分 header 校验加强为完整 27 列 header 校验。
+
+==================================================
+五、修改 RunAllSchemes.ps1
+==================================================
+
+必须全文件审查，不允许只修改 expectedHeaders。
+
+修改：
+
+$expectedHeaders
+New-EmptyResultRow
+Read-ValidatedResultsRows
+Get-RecordedSuccess
+Set-FailedResult
+
+以及所有：
+
+19-column assumption
+stride=5
+task offsets 0,5,10,15
+scheme block offsets
+
+新规则：
+
+total columns = 27
+block stride = 7
+task offsets = 0,7,14,21
+success offset = block + 1
+
+对于在 MATLAB 正常 evaluation 前发生的硬失败：
+
+success = 0
+inf_pr_0 = NaN
+iterations = NaN
+cpu = NaN
+collision = NaN
+
+对于已经产生 ampl_log 并进入 EvaluateOptimizationResult 的失败，
+由 MATLAB 解析并保留可获得的 inf_pr / iteration / cpu。
+
+==================================================
+六、历史 results1-N 不直接修改
+==================================================
+
+当前已有：
+
+results1.csv
+results2.csv
+...
+resultsN.csv
+
+可能是旧 19 列结构。
+
+不要覆盖或迁移这些文件。
+
+它们视为不可变的原始实验记录。
+
+后续新实验生成的 results.csv 使用新的 27 列结构。
+
+==================================================
+七、新增重复实验汇总脚本
+==================================================
+
+在仓库根目录新增：
+
+SummarizeRepeatedResults.m
+
+功能：
+
+自动扫描根目录：
+
+results1.csv
+results2.csv
+...
+resultsN.csv
+
+其中 N 不写死。
+
+只匹配：
+
+^results\d+\.csv$
+
+不要把当前临时 results.csv 自动混入，避免重复计数。
+
+按照数字编号排序：
+results2.csv 必须排在 results10.csv 前面。
+
+==================================================
+八、兼容旧19列和新27列结果
+==================================================
+
+SummarizeRepeatedResults.m 必须识别：
+
+旧版19列：
+task_id
+success
+cpu
+collision
+
+新版27列：
+task_id
+success
+inf_pr_0
+iterations
+cpu
+collision
+
+如果某一历史 CSV 没有 inf_pr_0 / iterations：
+这两个字段记为 NaN。
+
+但是：
+如果对应重复实验的 Results/ampl_log 历史日志已不存在，
+禁止伪造数据。
+
+输出中应明确记录：
+valid_inf_pr_samples
+valid_iteration_samples
+
+==================================================
+九、生成两张汇总表
+==================================================
+
+输出：
+
+RepeatedResults_Overall.csv
+RepeatedResults_ByTask.csv
+
+------------------------------
+A. RepeatedResults_Overall.csv
+------------------------------
+
+每个 Scheme 一行。
+
+至少包括：
+
+scheme
+num_repeats
+total_runs
+optimization_success_count
+optimization_success_rate
+safety_success_count
+safety_success_rate
+
+inf_pr_valid_count
+inf_pr_mean
+inf_pr_std
+inf_pr_median
+
+iteration_success_count
+iteration_mean_success
+iteration_std_success
+iteration_median_success
+
+cpu_success_count
+cpu_mean_success
+cpu_std_success
+cpu_median_success
+
+collision_success_count
+collision_mean_success
+collision_std_success
+collision_max_success
+
+统计规则：
+
+1. success rate：
+   所有 runs 为分母。
+
+2. safety success：
+   success==1 且 collision_percent==0。
+
+3. inf_pr：
+   对所有非 NaN inf_pr_0 统计，包括最终失败 run。
+
+4. iterations：
+   主均值/std/median 只统计 success==1 的 run。
+   失败 run 不混入“收敛所需迭代数”。
+
+5. CPU：
+   主均值/std/median 只统计 success==1。
+
+6. collision：
+   只统计 success==1 且 collision 非 NaN。
+
+------------------------------
+B. RepeatedResults_ByTask.csv
+------------------------------
+
+每个 Scheme × Task 一行。
+
+至少包括：
+
+scheme
+task_id
+num_repeats
+success_count
+success_rate
+safe_success_count
+safe_success_rate
+
+inf_pr_valid_count
+inf_pr_mean
+inf_pr_std
+inf_pr_median
+
+iteration_success_count
+iteration_mean_success
+iteration_std_success
+iteration_median_success
+
+cpu_success_count
+cpu_mean_success
+cpu_std_success
+cpu_median_success
+
+collision_success_count
+collision_mean_success
+collision_std_success
+collision_max_success
+
+==================================================
+十、增加严格配对的 Scheme1 vs Scheme2 汇总
+==================================================
+
+建议额外输出：
+
+RepeatedResults_S1_vs_S2.csv
+
+按照：
+repeat_id + task_id
+
+严格配对。
+
+至少统计每个 task：
+
+pair_count
+S1_inf_mean
+S2_inf_mean
+mean_inf_reduction
+median_inf_reduction
+
+S1_iteration_mean_success
+S2_iteration_mean_success
+
+S1_cpu_mean_success
+S2_cpu_mean_success
+
+S1_success_rate
+S2_success_rate
+
+其中：
+
+inf_reduction = S2_inf_pr_0 - S1_inf_pr_0
+
+正值表示 Scheme1 initial primal infeasibility 更低。
+
+如果历史 results1-N 没有 inf_pr 数据，则对应列 NaN，
+不能用当前单轮日志冒充过去重复实验的数据。
+
+==================================================
+十一、不要错误统计超时样本
+==================================================
+
+失败/timeout 的 iteration count 可以保留在原始结果中。
+
+但是不能加入：
+
+iteration_mean_success
+iteration_std_success
+
+否则会把“CPU限制下的截尾迭代数”误解释为正常收敛复杂度。
+
+如果以后需要研究失败样本，可以另加：
+
+failed_iteration_mean_observed
+
+但当前主汇总暂不需要。
+
+==================================================
+十二、README 更新
+==================================================
+
+更新 README.md：
+
+1. results.csv 从 19列改为27列。
+2. 解释 inf_pr_0。
+3. 解释 IPOPT iteration count。
+4. 解释成功/失败情况下哪些指标可用。
+5. 增加“Repeated experiments”章节：
+   - results1.csv...resultsN.csv
+   - SummarizeRepeatedResults.m
+   - 两张/三张输出汇总表
+6. 明确 raw results*.csv 不会被汇总脚本修改。
+
+==================================================
+十三、ExperimentDesignReview.md
+==================================================
+
+补充：
+
+1. inf_pr(0) 主要用于同模型 S1 vs S2 的初始可行性比较。
+2. 不建议把 S1/S3/S4 的 inf_pr 数值作为同一物理量直接排名。
+3. IPOPT iteration count 是求解过程指标，不是初值质量指标。
+4. timeout iterations 是 censored observations。
+5. S1 vs S3 应主要通过 success rate、iterations、CPU 分析 LSE pipeline。
+6. S1 vs S4 应主要通过 dense collision percentage / safety success 分析。
+
+==================================================
+十四、验证
+==================================================
+
+完成后：
+
+1. 不运行新的优化实验。
+2. 用仓库当前已有 ampl_log 测试日志解析器。
+3. 至少人工核对：
+   S1 task09
+   S2 task09
+   S3 task08
+   S4 task23
+4. 验证 inf_pr_0、iterations、CPU 与日志一致。
+5. 创建临时测试 CSV 验证27列读写，但不要覆盖历史 results1-5.csv。
+6. 运行 SummarizeRepeatedResults.m 对现有 results1-5.csv 做兼容性测试。
+7. 如果旧结果缺 inf_pr/iterations，应正确输出 NaN，而不是报错。
+8. 最后报告所有修改文件、具体修改内容和验证结果。

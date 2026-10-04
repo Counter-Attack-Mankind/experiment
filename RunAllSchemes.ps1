@@ -31,10 +31,10 @@ $schemes = @(
 )
 
 $expectedHeaders = @(
-    'scheme1_task_id','scheme1_success','scheme1_ipopt_cpu_time','scheme1_collision_percent','',
-    'scheme2_task_id','scheme2_success','scheme2_ipopt_cpu_time','scheme2_collision_percent','',
-    'scheme3_task_id','scheme3_success','scheme3_ipopt_cpu_time','scheme3_collision_percent','',
-    'scheme4_task_id','scheme4_success','scheme4_ipopt_cpu_time','scheme4_collision_percent'
+    'scheme1_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent','',
+    'scheme2_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent','',
+    'scheme3_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent','',
+    'scheme4_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent'
 )
 
 $standardTemporaryFiles = @(
@@ -177,7 +177,7 @@ function Get-TaskIds {
 
 function New-EmptyResultRow {
     param([Parameter(Mandatory = $true)][int]$TaskId)
-    $block = "$TaskId,NaN,NaN,NaN"
+    $block = "$TaskId,NaN,NaN,NaN,NaN,NaN"
     return "$block,,$block,,$block,,$block"
 }
 
@@ -192,10 +192,10 @@ function Read-ValidatedResultsRows {
     }
 
     $headers = @($lines[0] -split ',', -1)
-    if ($headers.Count -ne 19) {
-        throw "results.csv must have 19 columns; found $($headers.Count)."
+    if ($headers.Count -ne 27) {
+        throw "results.csv must have 27 columns; found $($headers.Count)."
     }
-    for ($column = 0; $column -lt 19; $column++) {
+    for ($column = 0; $column -lt 27; $column++) {
         if ($headers[$column] -cne $expectedHeaders[$column]) {
             throw "Unexpected results.csv header in column $($column + 1)."
         }
@@ -207,8 +207,8 @@ function Read-ValidatedResultsRows {
             continue
         }
         $fields = @($lines[$lineIndex] -split ',', -1)
-        if ($fields.Count -ne 19) {
-            throw "results.csv row $($lineIndex + 1) must have 19 columns."
+        if ($fields.Count -ne 27) {
+            throw "results.csv row $($lineIndex + 1) must have 27 columns."
         }
 
         $taskId = 0
@@ -218,7 +218,7 @@ function Read-ValidatedResultsRows {
         if ($rows.ContainsKey($taskId)) {
             throw "Duplicate task_id=$taskId in results.csv."
         }
-        foreach ($taskColumn in @(0,5,10,15)) {
+        foreach ($taskColumn in @(0,7,14,21)) {
             $blockTaskId = 0
             if (-not [int]::TryParse($fields[$taskColumn], [ref]$blockTaskId) -or
                     $blockTaskId -ne $taskId) {
@@ -278,7 +278,7 @@ function Get-RecordedSuccess {
     if (-not $rows.ContainsKey($TaskId)) {
         return $null
     }
-    $successColumn = (($SchemeIndex - 1) * 5) + 1
+    $successColumn = (($SchemeIndex - 1) * 7) + 1
     $value = ([string]$rows[$TaskId][$successColumn]).Trim()
     if ([string]::IsNullOrWhiteSpace($value) -or
             $value.Equals('NaN', [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -304,16 +304,18 @@ function Set-FailedResult {
     $updated = $false
     for ($lineIndex = 1; $lineIndex -lt $lines.Count; $lineIndex++) {
         $fields = @($lines[$lineIndex] -split ',', -1)
-        if ($fields.Count -ne 19) {
+        if ($fields.Count -ne 27) {
             throw "Cannot record failure: malformed results.csv row $($lineIndex + 1)."
         }
         $rowTaskId = 0
         if ([int]::TryParse($fields[0], [ref]$rowTaskId) -and
                 $rowTaskId -eq $TaskId) {
-            $baseColumn = ($SchemeIndex - 1) * 5
+            $baseColumn = ($SchemeIndex - 1) * 7
             $fields[$baseColumn + 1] = '0'
             $fields[$baseColumn + 2] = 'NaN'
             $fields[$baseColumn + 3] = 'NaN'
+            $fields[$baseColumn + 4] = 'NaN'
+            $fields[$baseColumn + 5] = 'NaN'
             $lines[$lineIndex] = $fields -join ','
             $updated = $true
             break

@@ -20,6 +20,8 @@ output_csv = fullfile(experiment_root, 'results.csv');
 result = struct();
 result.task_id = task_id;
 result.success = 0;
+result.inf_pr_0 = NaN;
+result.ipopt_iterations = NaN;
 result.ipopt_cpu_sec = NaN;
 result.total_frames = NaN;
 result.collision_frames = NaN;
@@ -45,6 +47,8 @@ end
 % 4. 若优化成功，计算 CPU 时间和碰撞百分比
 % ============================================================
 
+result.inf_pr_0 = parseInitialPrimalInfeasibility(log_file);
+result.ipopt_iterations = parseIpoptIterationCount(log_file);
 result.ipopt_cpu_sec = parseIpoptCpuTime(log_file);
 
 if result.success == 1
@@ -111,6 +115,8 @@ fprintf('\n');
 fprintf('========== Optimization Evaluation ==========\n');
 fprintf('task_id               : %d\n', result.task_id);
 fprintf('success               : %d\n', result.success);
+fprintf('initial inf_pr         : %.3f\n', result.inf_pr_0);
+fprintf('IPOPT iterations       : %.0f\n', result.ipopt_iterations);
 
 if result.success == 1
 
@@ -147,8 +153,79 @@ end
 
 %% ========================================================================
 % Local Function 1
-% 解析 IPOPT 总求解 CPU 时间
-%
+% Parse the iteration-0 unscaled original-constraint violation.
+% IPOPT may first push supplied initial values into variable bounds.
+% ========================================================================
+function inf_pr_0 = parseInitialPrimalInfeasibility(log_file)
+
+inf_pr_0 = NaN;
+
+if exist(log_file, 'file') ~= 2
+    warning( ...
+        'EvaluateOptimizationResult:MissingLog', ...
+        'AMPL log file does not exist: %s', ...
+        log_file);
+    return;
+end
+
+log_text = fileread(log_file);
+tokens = regexp( ...
+    log_text, ...
+    '(?m)^\s*0\s+[0-9Ee+\-.]+\s+([0-9Ee+\-.]+)\s+', ...
+    'tokens');
+
+if numel(tokens) ~= 1
+    warning( ...
+        'EvaluateOptimizationResult:InitialPrimalInfeasibilityNotFound', ...
+        'Expected one IPOPT iteration-0 row in %s; found %d.', ...
+        log_file, numel(tokens));
+    return;
+end
+
+inf_pr_0 = str2double(tokens{1}{1});
+
+end
+
+
+%% ========================================================================
+% Local Function 2
+% Parse IPOPT's authoritative final iteration count, including restoration
+% iterations. A time-limited count is a stopped, not converged, observation.
+% ========================================================================
+function iterations = parseIpoptIterationCount(log_file)
+
+iterations = NaN;
+
+if exist(log_file, 'file') ~= 2
+    warning( ...
+        'EvaluateOptimizationResult:MissingLog', ...
+        'AMPL log file does not exist: %s', ...
+        log_file);
+    return;
+end
+
+log_text = fileread(log_file);
+tokens = regexp( ...
+    log_text, ...
+    'Number of Iterations\.\.\.\.:\s*(\d+)', ...
+    'tokens');
+
+if numel(tokens) ~= 1
+    warning( ...
+        'EvaluateOptimizationResult:IpoptIterationCountNotFound', ...
+        'Expected one IPOPT iteration summary in %s; found %d.', ...
+        log_file, numel(tokens));
+    return;
+end
+
+
+iterations = str2double(tokens{1}{1});
+
+end
+
+
+%% ========================================================================
+% Local Function 3
 % Total solver CPU =
 %   IPOPT internal CPU (w/o function evaluations)
 % + NLP function evaluation CPU
@@ -224,7 +301,7 @@ end
 
 
 %% ========================================================================
-% Local Function 2
+% Local Function 4
 % 读取必要的优化变量
 % ========================================================================
 function vec = readRequiredVector(runtime_dir, filename)
@@ -245,7 +322,7 @@ end
 
 
 %% ========================================================================
-% Local Function 3
+% Local Function 5
 % theta 连续化
 % ========================================================================
 function theta = unwrapTheta(theta)
@@ -268,7 +345,7 @@ end
 
 
 %% ========================================================================
-% Local Function 4
+% Local Function 6
 % 对优化后的 Nfe 轨迹进行固定时间步长线性插值
 % ========================================================================
 function [x_dense, y_dense, theta_dense] = interpolateOptimizedTrajectory(x, y, theta, dt, eval_dt)
@@ -314,7 +391,7 @@ end
 
 
 %% ========================================================================
-% Local Function 5
+% Local Function 7
 % 对全部稠密轨迹帧执行真实车身 SAT 碰撞检测
 % ========================================================================
 function [collision_mask, collision_frames] = ...
@@ -369,7 +446,7 @@ end
 
 
 %% ========================================================================
-% Local Function 6
+% Local Function 8
 % 构造真实车辆矩形
 %
 % 与 PlotTrueVehicleSweptAreaOnly 中真实车体定义一致。
@@ -408,7 +485,7 @@ end
 
 
 %% ========================================================================
-% Local Function 7
+% Local Function 9
 % SAT 多边形碰撞检测
 %
 % 适用于当前实验中的凸多边形：
@@ -459,7 +536,7 @@ end
 
 
 %% ========================================================================
-% Local Function 8
+% Local Function 10
 % 获取 SAT 所需的边法向量
 % ========================================================================
 function axes_out = polygonAxes(poly)

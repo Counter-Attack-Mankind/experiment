@@ -74,7 +74,7 @@
 
 `-InitializeOnly` 保留为一种轻量级操作，用于：
 
-- 检查 19 列结果表结构是否合法；
+- 检查 27 列结果表结构是否合法；
 - 将新发现的 real 任务添加到结果表中；
 - 不修改任何已有实验结果。
 
@@ -178,15 +178,27 @@ task_XX.png
 
 ## 结果表
 
-`results.csv` 保持现有的 19 列结构。
+`results.csv` 使用 27 列结构。
 
-每一种 scheme 占用四个数值字段，并通过一个空列与下一种 scheme 分隔：
+旧版 19 列结果表不会被自动迁移。开始新一轮完整实验前，应按既定流程使用
+`-Clear` 清除旧结果，再由批处理脚本创建新的 27 列空表。
+
+每一种 scheme 占用六个数值字段，并通过一个空列与下一种 scheme 分隔：
 
 ```text
-task_id, success, ipopt_cpu_time, collision_percent
+schemeN_task_id, success, inf_pr_0, ipopt_iterations, ipopt_cpu_time, collision_percent
 ```
 
-运行某个选定 scheme 时，只会更新该 scheme 对应的四列数据。
+只有每个 block 的 `task_id` 携带 scheme 前缀，例如 `scheme1_task_id`；
+其余指标列名在各 block 中重复使用，不携带 scheme 前缀。
+
+`inf_pr_0` 是 IPOPT iteration 0 输出的未缩放原始约束违反量，按三位小数写入。
+它对应 IPOPT 初始化后的点，可能已经受默认 bound push 调整，并不是初值到可行域的欧氏距离。
+
+`ipopt_iterations` 来自日志中的 `Number of Iterations`。它包含 restoration phase
+迭代；对于 CPU timeout，它表示求解停止时已经执行的迭代数，而不是收敛所需迭代数。
+
+运行某个选定 scheme 时，只会更新该 scheme 对应的六列数据。
 
 其他 scheme 的已有实验结果不会被修改。
 

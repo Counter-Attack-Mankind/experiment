@@ -37,8 +37,16 @@ This document records design findings only. The model definitions below were not
 
 10. `alpha=60` is duplicated in initialization and NLP code. If it is changed in only one location, the warm start and optimized model will no longer match.
 
-## Suggested interpretation without changing the current code
+## Suggested interpretation
 
 - Describe Scheme1 versus Scheme2 as an **OBCA-initialization feasibility repair ablation**, not as a comparison of different feasible sets.
 - Describe Scheme1 versus Scheme3 as a **complete LSE-based versus exact-max-based pipeline comparison**. Do not call it an NLP-only substitution unless both schemes are fed the same fixed initial trajectory and `Nfe`.
 - Describe Scheme4 as an **equal-time-resampled initialization with body-only node constraints** unless equal `dt` is explicitly enforced in the NLP.
+
+## IPOPT initialization and convergence metrics
+
+- `inf_pr_0` is the `inf_pr` value printed for IPOPT iteration 0: the infinity norm of the unscaled original-constraint violation at IPOPT's initialized point. IPOPT may first push supplied primal values into variable bounds, so this is not necessarily the residual of the literal values written to `ig.INIVAL`, and it is not a Euclidean distance to the feasible set.
+- `inf_pr_0` is directly comparable between Scheme1 and Scheme2 because they use the same NLP, dimensions, solver, and options. It should not be used as a simple cross-model ranking for Scheme1 versus Scheme3 or Scheme4 because those models use different constraint functions or constraint sets.
+- `ipopt_iterations` is the `Number of Iterations` reported by IPOPT and includes restoration-phase iterations. It complements CPU time but does not represent equal computational work across differently sized NLPs.
+- Iteration counts from `Maximum CPU time exceeded` runs are retained as stopped/right-censored observations. They must not be described as iterations required for convergence.
+- The primary reporting set is optimization success, IPOPT CPU time, `inf_pr_0`, IPOPT iteration count, dense collision percentage, and safety success. A first-near-feasible iteration metric is diagnostic only because `inf_pr` is nonmonotone and the printed log has limited precision.
