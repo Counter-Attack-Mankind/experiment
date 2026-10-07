@@ -22,7 +22,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 10;
+task_id = 15;
 batch_task_id = str2double(getenv('EXPERIMENT_TASK_ID'));
 if isfinite(batch_task_id) && batch_task_id >= 1
     task_id = round(batch_task_id);

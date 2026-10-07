@@ -1,7 +1,6 @@
 # Scheme 1 NLP: smooth LSE embodied-footprint model with OBCA collision constraints.
 
 param alpha := 60;
-param kappa_smooth_eps := 1e-4;
 param PV{i in 1..18};
 param Nobs := PV[16];
 param Nedge{i in 1..Nobs} integer >= 3 <= 4;
@@ -92,9 +91,9 @@ s.t. define_sminus{i in 1..Nfe-1}:
     sminus[i] = (1/alpha)*log(1+exp(alpha*(-s[i])));
 
 s.t. define_up{i in 1..Nfe-1}:
-    up[i] = splus[i] + hlb*sqrt(k[i]^2 + kappa_smooth_eps^2)*splus[i];
+    up[i] = splus[i] + hlb*abs(k[i])*splus[i];
 s.t. define_down{i in 1..Nfe-1}:
-    down[i] = sminus[i] + hlb*sqrt(k[i]^2 + kappa_smooth_eps^2)*sminus[i];
+    down[i] = sminus[i] + hlb*abs(k[i])*sminus[i];
 
 s.t. define_left{i in 1..Nfe-1}:
     left[i] = (1/alpha)*log(exp(alpha*(-lr*k[i]*splus[i]))
@@ -132,23 +131,15 @@ s.t. Bonds_w{i in 1..Nfe}: -w_max <= w[i] <= w_max;
 
 # Validity conditions of the embodied-footprint construction.
 s.t. EF_arc_bound{i in 1..Nfe-1}:
-    sqrt(k[i]^2 + kappa_smooth_eps^2)*(splus[i]+sminus[i]) <= 1.5708;
+    abs(k[i])*(splus[i]+sminus[i]) <= 1.5708;
 s.t. EF_forward_cond1{i in 1..Nfe-1}:
-    (1+hlb*sqrt(k[i]^2+kappa_smooth_eps^2))
-    *tan(sqrt(k[i]^2+kappa_smooth_eps^2)*splus[i])
-    <= lr*sqrt(k[i]^2+kappa_smooth_eps^2);
+    (1+hlb*abs(k[i]))*tan(abs(k[i])*splus[i])<= lr*abs(k[i]);
 s.t. EF_forward_cond2{i in 1..Nfe-1}:
-    sqrt(k[i]^2+kappa_smooth_eps^2)*LF
-    *tan(sqrt(k[i]^2+kappa_smooth_eps^2)*splus[i])
-    <= 1+hlb*sqrt(k[i]^2+kappa_smooth_eps^2);
+    abs(k[i])*LF*tan(abs(k[i])*splus[i])<= 1+hlb*abs(k[i]);
 s.t. EF_reverse_cond1{i in 1..Nfe-1}:
-    (1+hlb*sqrt(k[i]^2+kappa_smooth_eps^2))
-    *tan(sqrt(k[i]^2+kappa_smooth_eps^2)*sminus[i])
-    <= LF*sqrt(k[i]^2+kappa_smooth_eps^2);
+    (1+hlb*abs(k[i]))*tan(abs(k[i])*sminus[i])<= LF*abs(k[i]);
 s.t. EF_reverse_cond2{i in 1..Nfe-1}:
-    sqrt(k[i]^2+kappa_smooth_eps^2)*lr
-    *tan(sqrt(k[i]^2+kappa_smooth_eps^2)*sminus[i])
-    <= 1+hlb*sqrt(k[i]^2+kappa_smooth_eps^2);
+    abs(k[i])*lr*tan(abs(k[i])*sminus[i])<= 1+hlb*abs(k[i]);
 
 # Embodied-footprint corner coordinates.
 s.t. RELATIONSHIP_AX{i in 1..Nfe-1}:

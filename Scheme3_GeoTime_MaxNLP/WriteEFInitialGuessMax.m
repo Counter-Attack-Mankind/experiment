@@ -40,7 +40,7 @@ w_max = params.vehicle.w_max;
 %========================
 dt     = time;                  % Nfe-1
 kappa  = tan(phy(1:Nfe-1)) / lw;
-kappa_abs = sqrt(kappa.^2 + 1e-8);
+kappa_abs = abs(kappa)
 
 s      = zeros(Nfe-1,1);
 splus  = zeros(Nfe-1,1);
@@ -94,7 +94,7 @@ phy(Nfe) = 0;
 
 % 首末端修正后，重新计算区间曲率
 kappa = tan(phy(1:Nfe-1)) / lw;
-kappa_abs = sqrt(kappa.^2 + 1e-8);
+kappa_abs = abs(kappa);
 
 %========================
 % 区间量：1..Nfe-1
