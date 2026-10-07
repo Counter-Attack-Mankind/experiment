@@ -7,10 +7,10 @@ current_dir = fileparts(mfilename('fullpath'));
 % 项目根目录（上一级）
 project_root = fileparts(current_dir);
 % 数据目录
-%data_dir = fullfile(project_root, 'Environment', 'real');
+data_dir = fullfile(project_root, 'Environment', 'real');
 task_source = strtrim(getenv('EXPERIMENT_TASK_SOURCE'));
 if isempty(task_source)
-    task_source = 'Data_test';
+    task_source = 'real';
 end
 if ~any(strcmpi(task_source, {'real','Data_test'}))
     error('LoadTask:InvalidSource', ...
