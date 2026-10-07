@@ -42,7 +42,7 @@ alpha = 60;
 %========================
 dt     = time;                  % Nfe-1
 kappa  = tan(phy(1:Nfe-1)) / lw;
-kappa_abs = abs(kappa)
+kappa_abs = abs(kappa);
 
 s      = zeros(Nfe-1,1);
 splus  = zeros(Nfe-1,1);
