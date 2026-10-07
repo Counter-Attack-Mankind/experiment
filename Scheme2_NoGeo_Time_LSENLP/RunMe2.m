@@ -29,7 +29,7 @@ fprintf('===================================\n');
 
 global params
 
-task_id = 11;
+task_id = 9;
 batch_task_id = str2double(getenv('EXPERIMENT_TASK_ID'));
 if isfinite(batch_task_id) && batch_task_id >= 1
     task_id = round(batch_task_id);
@@ -60,7 +60,7 @@ end
 
 %% == InitalGuess write and check =======
 WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time(1:end-1));
-%VisualizeInitialEFCollision('written_initial_guess_data.mat');
+VisualizeInitialEFCollision('written_initial_guess_data.mat');
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
 %% ==== IPOPT / AMPL ====
