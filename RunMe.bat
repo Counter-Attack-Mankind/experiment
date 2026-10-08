@@ -25,26 +25,22 @@ echo.
 echo   [1] Run all schemes
 echo   [2] Run Scheme1 only
 echo   [3] Run Scheme2 only
-echo   [4] Run Scheme3 only
-echo   [5] Run Scheme4 only
 echo.
-echo   [6] Resume unfinished experiments
-echo   [7] Retry failed experiments
+echo   [4] Resume unfinished experiments
+echo   [5] Retry failed experiments
 echo.
-echo   [8] Clear generated experiment files
+echo   [6] Clear generated experiment files
 echo.
 echo   [0] Exit
 echo.
 echo ==========================================
 
-choice /C 123456780 /N /M "Select mode: "
+choice /C 1234560 /N /M "Select mode: "
 
-if errorlevel 9 goto EXIT
-if errorlevel 8 goto CLEAR
-if errorlevel 7 goto RETRY
-if errorlevel 6 goto RESUME
-if errorlevel 5 goto SCHEME4
-if errorlevel 4 goto SCHEME3
+if errorlevel 7 goto EXIT
+if errorlevel 6 goto CLEAR
+if errorlevel 5 goto RETRY
+if errorlevel 4 goto RESUME
 if errorlevel 3 goto SCHEME2
 if errorlevel 2 goto SCHEME1
 if errorlevel 1 goto ALL
@@ -71,22 +67,6 @@ echo Running Scheme2...
 echo.
 powershell -NoProfile -ExecutionPolicy Bypass ^
     -File "%~dp0RunAllSchemes.ps1" -Scheme2
-goto FINISH
-
-:SCHEME3
-cls
-echo Running Scheme3...
-echo.
-powershell -NoProfile -ExecutionPolicy Bypass ^
-    -File "%~dp0RunAllSchemes.ps1" -Scheme3
-goto FINISH
-
-:SCHEME4
-cls
-echo Running Scheme4...
-echo.
-powershell -NoProfile -ExecutionPolicy Bypass ^
-    -File "%~dp0RunAllSchemes.ps1" -Scheme4
 goto FINISH
 
 :RESUME

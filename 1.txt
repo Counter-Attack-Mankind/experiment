@@ -1,0 +1,10 @@
+1.目前schceme1-4消融实验做下来，发现scheme2不使用几何增强和scheme3使用max，和scheme1对比下来效果并不是很明显
+所以判断下来认为只需要保留scheme3和对比的scheme4，scheme3是最纯粹的论文做法，scheme4对照证明模型有效性。
+
+2.目前我已经删除了scheme1-scheme2，也就是之前scheme1使用LSE，scheme2不使用几何增强，scheme3使用max，scheme4使用真实车身模型
+现在我将scheme3更名为scheme1，同时scheme4更名为scheme2。
+
+3.请你查看目前这两个实验文件夹中是否存在对应不上的流程或者因为改动而有的报错，包括RunAllSchemes.ps1，以及Scheme1_GeoTime_MaxNLP，
+Scheme2_body_only_baseline文件夹下的都要修复好。
+
+4.修改的总文件夹是D:\desktop\experiment

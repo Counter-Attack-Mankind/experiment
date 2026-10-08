@@ -1,13 +1,11 @@
 function UpdateUnifiedResults(output_csv, scheme_dir, result)
-%UPDATEUNIFIEDRESULTS Update one result in the root 27-column CSV file.
+%UPDATEUNIFIEDRESULTS Update one result in the root 13-column CSV file.
 % Each scheme uses six columns and adjacent schemes are separated by one
 % empty column. Collision percentages are written with two decimal places.
 
 scheme_folders = { ...
-    'Scheme1_Full_GeoTime_LSENLP', ...
-    'Scheme2_NoGeo_Time_LSENLP', ...
-    'Scheme3_GeoTime_MaxNLP', ...
-    'Scheme4_body_only_baseline'};
+    'Scheme1_GeoTime_MaxNLP', ...
+    'Scheme2_body_only_baseline'};
 [~, scheme_folder] = fileparts(scheme_dir);
 scheme_index = find(strcmp(scheme_folder, scheme_folders), 1);
 if isempty(scheme_index)
@@ -24,14 +22,14 @@ if exist(output_csv, 'file') == 2
     end
     actual_headers = string(raw(1,:));
     actual_headers(ismissing(actual_headers)) = "";
-    if size(raw,2) ~= 27 || ...
+    if size(raw,2) ~= 13 || ...
             ~isequal(actual_headers,string(headers))
         error('UpdateUnifiedResults:InvalidTable', ...
-            'Existing results.csv does not have the expected 27-column layout.');
+            'Existing results.csv does not have the expected 13-column layout.');
     end
     rows = raw(2:end,:);
 else
-    rows = cell(0,27);
+    rows = cell(0,13);
 end
 
 task_ids = nan(size(rows,1),1);
@@ -40,11 +38,11 @@ for r = 1:size(rows,1)
 end
 row_index = find(task_ids == result.task_id,1);
 if isempty(row_index)
-    new_row = cell(1,27);
-    for c = [1,8,15,22]
+    new_row = cell(1,13);
+    for c = [1,8]
         new_row{c} = result.task_id;
     end
-    for c = [2:6,9:13,16:20,23:27]
+    for c = [2:6,9:13]
         new_row{c} = NaN;
     end
     rows(end+1,:) = new_row;
@@ -69,8 +67,8 @@ fprintf('Unified evaluation table updated: %s\n',output_csv);
 end
 
 function headers = unifiedHeaders()
-headers = cell(1,27);
-for scheme_index = 1:4
+headers = cell(1,13);
+for scheme_index = 1:2
     base = 1+(scheme_index-1)*7;
     headers{base} = sprintf('scheme%d_task_id',scheme_index);
     headers{base+1} = 'success';
@@ -78,7 +76,7 @@ for scheme_index = 1:4
     headers{base+3} = 'ipopt_iterations';
     headers{base+4} = 'ipopt_cpu_time';
     headers{base+5} = 'collision_percent';
-    if scheme_index < 4
+    if scheme_index < 2
         headers{base+6} = '';
     end
 end
@@ -100,16 +98,16 @@ if fid < 0
 end
 cleanup = onCleanup(@() fclose(fid)); %#ok<NASGU>
 fprintf(fid,'%s\n',strjoin(headers,','));
-task_columns = [1,8,15,22];
-success_columns = [2,9,16,23];
-inf_pr_columns = [3,10,17,24];
-iteration_columns = [4,11,18,25];
-cpu_columns = [5,12,19,26];
-collision_columns = [6,13,20,27];
+task_columns = [1,8];
+success_columns = [2,9];
+inf_pr_columns = [3,10];
+iteration_columns = [4,11];
+cpu_columns = [5,12];
+collision_columns = [6,13];
 for r = 1:size(rows,1)
-    fields = cell(1,27);
-    for c = 1:27
-        if any(c == [7,14,21])
+    fields = cell(1,13);
+    for c = 1:13
+        if c == 7
             fields{c} = '';
             continue;
         end

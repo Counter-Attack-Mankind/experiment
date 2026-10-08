@@ -2,8 +2,6 @@
 param(
     [switch]$Scheme1,
     [switch]$Scheme2,
-    [switch]$Scheme3,
-    [switch]$Scheme4,
     [switch]$Resume,
     [switch]$RetryFailed,
     [switch]$Clear,
@@ -24,17 +22,13 @@ $taskDirectory = Join-Path $experimentRoot "public\Environment\$taskSource"
 $resultsFile = Join-Path $experimentRoot 'results.csv'
 
 $schemes = @(
-    [pscustomobject]@{ Index = 1; Name = 'scheme1'; Directory = 'Scheme1_Full_GeoTime_LSENLP'; Script = 'RunMe1.m' },
-    [pscustomobject]@{ Index = 2; Name = 'scheme2'; Directory = 'Scheme2_NoGeo_Time_LSENLP'; Script = 'RunMe2.m' },
-    [pscustomobject]@{ Index = 3; Name = 'scheme3'; Directory = 'Scheme3_GeoTime_MaxNLP'; Script = 'RunMe3.m' },
-    [pscustomobject]@{ Index = 4; Name = 'scheme4'; Directory = 'Scheme4_body_only_baseline'; Script = 'RunMe4.m' }
+    [pscustomobject]@{ Index = 1; Name = 'scheme1'; Directory = 'Scheme1_GeoTime_MaxNLP'; Script = 'RunMe1.m' },
+    [pscustomobject]@{ Index = 2; Name = 'scheme2'; Directory = 'Scheme2_body_only_baseline'; Script = 'RunMe2.m' }
 )
 
 $expectedHeaders = @(
     'scheme1_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent','',
-    'scheme2_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent','',
-    'scheme3_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent','',
-    'scheme4_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent'
+    'scheme2_task_id','success','inf_pr_0','ipopt_iterations','ipopt_cpu_time','collision_percent'
 )
 
 $standardTemporaryFiles = @(
@@ -45,13 +39,13 @@ $standardTemporaryFiles = @(
     'OBCAData.dat',
     'written_initial_guess_data.mat'
 )
-$scheme4TemporaryFiles = @(
-    'Area_scheme4',
-    'PPP_scheme4',
-    'PV_scheme4',
-    'ig_scheme4.INIVAL',
-    'OBCAData_scheme4.dat',
-    'written_initial_guess_data_scheme4.mat'
+$scheme2TemporaryFiles = @(
+    'Area_scheme2',
+    'PPP_scheme2',
+    'PV_scheme2',
+    'ig_scheme2.INIVAL',
+    'OBCAData_scheme2.dat',
+    'written_initial_guess_data_scheme2.mat'
 )
 
 function Assert-PathInsideRoot {
@@ -102,8 +96,8 @@ function Clear-GeneratedArtifacts {
         Remove-GeneratedDirectory -Path (Join-Path $schemeRoot 'Results')
 
         $temporaryFiles = $standardTemporaryFiles
-        if ($scheme.Index -eq 4) {
-            $temporaryFiles = $scheme4TemporaryFiles
+        if ($scheme.Index -eq 2) {
+            $temporaryFiles = $scheme2TemporaryFiles
         }
         foreach ($filename in $temporaryFiles) {
             Remove-GeneratedFile -Path (Join-Path $schemeRoot $filename)
@@ -126,10 +120,10 @@ function Clear-GeneratedArtifacts {
         }
     }
 
-    # Scheme1 generates this matched-Nfe input for Scheme4. Keeping it after
-    # -Clear could silently mix an old Scheme1 run with a new Scheme4 run.
+    # Scheme1 generates this matched-Nfe input for Scheme2. Keeping it after
+    # -Clear could silently mix an old Scheme1 run with a new Scheme2 run.
     Remove-GeneratedFile -Path (
-        Join-Path $experimentRoot 'Scheme1_Full_GeoTime_LSENLP\Nfe_config.txt')
+        Join-Path $experimentRoot 'Scheme1_GeoTime_MaxNLP\Nfe_config.txt')
 
     Write-Host 'Experiment-generated artifacts were cleared.'
 }
@@ -145,8 +139,8 @@ function Reset-SchemeScratch {
         Out-Null
 
     $temporaryFiles = $standardTemporaryFiles
-    if ($Scheme.Index -eq 4) {
-        $temporaryFiles = $scheme4TemporaryFiles
+    if ($Scheme.Index -eq 2) {
+        $temporaryFiles = $scheme2TemporaryFiles
     }
     foreach ($filename in $temporaryFiles) {
         Remove-GeneratedFile -Path (Join-Path $schemeRoot $filename)
@@ -178,7 +172,7 @@ function Get-TaskIds {
 function New-EmptyResultRow {
     param([Parameter(Mandatory = $true)][int]$TaskId)
     $block = "$TaskId,NaN,NaN,NaN,NaN,NaN"
-    return "$block,,$block,,$block,,$block"
+    return "$block,,$block"
 }
 
 function Read-ValidatedResultsRows {
@@ -192,10 +186,10 @@ function Read-ValidatedResultsRows {
     }
 
     $headers = @($lines[0] -split ',', -1)
-    if ($headers.Count -ne 27) {
-        throw "results.csv must have 27 columns; found $($headers.Count)."
+    if ($headers.Count -ne 13) {
+        throw "results.csv must have 13 columns; found $($headers.Count)."
     }
-    for ($column = 0; $column -lt 27; $column++) {
+    for ($column = 0; $column -lt 13; $column++) {
         if ($headers[$column] -cne $expectedHeaders[$column]) {
             throw "Unexpected results.csv header in column $($column + 1)."
         }
@@ -207,8 +201,8 @@ function Read-ValidatedResultsRows {
             continue
         }
         $fields = @($lines[$lineIndex] -split ',', -1)
-        if ($fields.Count -ne 27) {
-            throw "results.csv row $($lineIndex + 1) must have 27 columns."
+        if ($fields.Count -ne 13) {
+            throw "results.csv row $($lineIndex + 1) must have 13 columns."
         }
 
         $taskId = 0
@@ -218,7 +212,7 @@ function Read-ValidatedResultsRows {
         if ($rows.ContainsKey($taskId)) {
             throw "Duplicate task_id=$taskId in results.csv."
         }
-        foreach ($taskColumn in @(0,7,14,21)) {
+        foreach ($taskColumn in @(0,7)) {
             $blockTaskId = 0
             if (-not [int]::TryParse($fields[$taskColumn], [ref]$blockTaskId) -or
                     $blockTaskId -ne $taskId) {
@@ -304,7 +298,7 @@ function Set-FailedResult {
     $updated = $false
     for ($lineIndex = 1; $lineIndex -lt $lines.Count; $lineIndex++) {
         $fields = @($lines[$lineIndex] -split ',', -1)
-        if ($fields.Count -ne 27) {
+        if ($fields.Count -ne 13) {
             throw "Cannot record failure: malformed results.csv row $($lineIndex + 1)."
         }
         $rowTaskId = 0
@@ -332,9 +326,9 @@ function Assert-MatchedNfeExists {
     param([Parameter(Mandatory = $true)][int]$TaskId)
 
     $configFile = Join-Path $experimentRoot `
-        'Scheme1_Full_GeoTime_LSENLP\Nfe_config.txt'
+        'Scheme1_GeoTime_MaxNLP\Nfe_config.txt'
     if (-not (Test-Path -LiteralPath $configFile -PathType Leaf)) {
-        throw "Scheme4 task $TaskId requires Scheme1 matched Nfe, but Nfe_config.txt is missing. Run Scheme1 for this task first."
+        throw "Scheme2 task $TaskId requires Scheme1 matched Nfe, but Nfe_config.txt is missing. Run Scheme1 for this task first."
     }
 
     $matched = $false
@@ -347,11 +341,11 @@ function Assert-MatchedNfeExists {
         }
     }
     if (-not $matched) {
-        throw "Scheme4 task $TaskId has no valid matched Nfe in $configFile. Run Scheme1 for this task first."
+        throw "Scheme2 task $TaskId has no valid matched Nfe in $configFile. Run Scheme1 for this task first."
     }
 }
 
-$schemeSelectionWasSpecified = $Scheme1 -or $Scheme2 -or $Scheme3 -or $Scheme4
+$schemeSelectionWasSpecified = $Scheme1 -or $Scheme2
 if ($Resume -and $RetryFailed) {
     throw '-Resume and -RetryFailed are mutually exclusive.'
 }
@@ -380,8 +374,6 @@ $selectedSchemes = @($schemes | Where-Object {
     switch ($_.Index) {
         1 { return $Scheme1 }
         2 { return $Scheme2 }
-        3 { return $Scheme3 }
-        4 { return $Scheme4 }
     }
 })
 
@@ -421,7 +413,7 @@ try {
                 continue
             }
 
-            if ($scheme.Index -eq 4) {
+            if ($scheme.Index -eq 2) {
                 Assert-MatchedNfeExists -TaskId $taskId
             }
 
