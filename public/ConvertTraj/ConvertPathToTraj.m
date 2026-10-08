@@ -340,11 +340,6 @@ end
 
 chg = unique(chg, 'stable');
 
-% TimeDistribution operates on the dense, time-parameterized trajectory.
-% Store direction-switch indices in that same index space so the temporal
-% mesh can retain every cusp explicitly.
-params.ef.dense_change_idx = chg;
-
 fprintf('速度匹配后，检测到换向次数: %d\n', numel(chg));
 
 for k = 1:numel(chg)

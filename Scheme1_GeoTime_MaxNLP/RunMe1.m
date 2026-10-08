@@ -27,7 +27,7 @@ fprintf('===================================\n');
 %% ===== 基础初始化 =====
 
 global params
-task_id = 8;
+task_id = 3;
 batch_task_id = str2double(getenv('EXPERIMENT_TASK_ID'));
 if isfinite(batch_task_id) && batch_task_id >= 1
     task_id = round(batch_task_id);
@@ -63,8 +63,7 @@ end
 
 %% ==== Initial guess write and check ====
 WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time(1:end-1));
-SaveScheme1SharedInitialGuess( ...
-    scheme_dir, task_id, fullfile(scheme_dir, 'written_initial_guess_data.mat'));
+SaveScheme1SharedInitialGuess(scheme_dir, task_id, fullfile(scheme_dir, 'written_initial_guess_data.mat'));
 %VisualizeInitialEFCollision('written_initial_guess_data.mat');
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 

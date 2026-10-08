@@ -8,15 +8,16 @@ current_dir = fileparts(mfilename('fullpath'));
 project_root = fileparts(current_dir);
 % 数据目录
 data_dir = fullfile(project_root, 'Environment', 'real');
+
 task_source = strtrim(getenv('EXPERIMENT_TASK_SOURCE'));
 if isempty(task_source)
     task_source = 'real';
 end
 if ~any(strcmpi(task_source, {'real','Data_test'}))
-    error('LoadTask:InvalidSource', ...
-        'EXPERIMENT_TASK_SOURCE must be real or Data_test, not %s.',task_source);
+    error('LoadTask:InvalidSource', 'EXPERIMENT_TASK_SOURCE must be real or Data_test, not %s.',task_source);
 end
-data_dir = fullfile(project_root,'Environment',task_source);
+
+
 % 构造文件路径
 file_path = fullfile(data_dir, [num2str(task_id), '.mat']);
 % 检查文件是否存在

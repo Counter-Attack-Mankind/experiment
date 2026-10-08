@@ -40,7 +40,7 @@ w_max = params.vehicle.w_max;
 %========================
 dt     = time;                  % Nfe-1
 kappa  = tan(phy(1:Nfe-1)) / lw;
-kappa_abs = abs(kappa);
+kappa_abs = sqrt(kappa.^2 + 1e-8);
 
 s      = zeros(Nfe-1,1);
 splus  = zeros(Nfe-1,1);
@@ -94,7 +94,7 @@ phy(Nfe) = 0;
 
 % 首末端修正后，重新计算区间曲率
 kappa = tan(phy(1:Nfe-1)) / lw;
-kappa_abs = abs(kappa);
+kappa_abs = sqrt(kappa.^2 + 1e-8);
 
 %========================
 % 区间量：1..Nfe-1
@@ -195,6 +195,7 @@ fprintf(fid, 'let tf := %.12f;\r\n', sum(time));
 fclose(fid);
 
 params.ef.ig.time = time;
+params.task.thetaf = theta(end);
 
 %========================
 % 写 PV
@@ -307,8 +308,6 @@ data.DX = DX; data.DY = DY;
 
 data.meta = struct();
 data.meta.Nfe      = params.nfe;
-data.meta.task_id  = params.task_id;
-data.meta.task_source = strtrim(getenv('EXPERIMENT_TASK_SOURCE'));
 data.meta.x0       = params.task.x0;
 data.meta.y0       = params.task.y0;
 data.meta.theta0   = params.task.theta0;

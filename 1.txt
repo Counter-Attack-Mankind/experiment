@@ -27,3 +27,4 @@ Scheme2_body_only_baseline文件夹下的都要修复好。
 8. 修改 RunAllSchemes.ps1，确保 Scheme1 先生成初值，Scheme2 后读取；失败时清除旧指标。
 9. 标记未使用的 LSE 和旧转换函数为 legacy，列出，后续我来删除。
 10. 增加初值一致性检查，比较两方案全部共享变量，最大误差不得超过 1e-9。
+
