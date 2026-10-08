@@ -11,8 +11,6 @@ addpath(fullfile(public_dir, 'Common'));
 addpath(fullfile(public_dir, 'Environment'));
 addpath(fullfile(public_dir, 'Visualize'));
 addpath(fullfile(public_dir, 'check'));
-addpath(fullfile(public_dir, 'hybridAstar'));
-addpath(fullfile(public_dir, 'ConvertTraj'));
 addpath(scheme_dir);
 addpath(fullfile(scheme_dir, 'Common'));
 
@@ -20,9 +18,9 @@ addpath(fullfile(scheme_dir, 'Common'));
 cd(scheme_dir);
 
 fprintf('\n===== Active Scheme Functions =====\n');
-fprintf('ConvertPathToTraj        : %s\n', which('ConvertPathToTraj'));
-fprintf('TimeDistribution         : %s\n', which('TimeDistribution'));
-fprintf('SearchTrajViaHybridAstar : %s\n', which('SearchTrajViaHybridAstar'));
+fprintf('Shared initial loader    : %s\n', which('LoadScheme1SharedInitialGuess'));
+fprintf('Scheme2 initial writer   : %s\n', which('Scheme2_WriteInitialGuess'));
+fprintf('Consistency check        : %s\n', which('AssertSharedInitialGuessConsistency'));
 fprintf('===================================\n');
 
 %% ===== 基础初始化 =====
@@ -39,24 +37,16 @@ LoadTask(task_id);
 params.io.scheme_dir = scheme_dir;
 params.io.task_id    = task_id;
 
-%% ==== hybrid A=======
-params.ha.enable_debug_plot = 0;
-params.ha.debug_plot_stride = 50;
-params.ha.strategy_name = 'Scheme2_body_only_baseline';
-params.ha.sweep_scale = 0;
-
-fprintf('\n========== Scheme2: body-only Hybrid A* + matched Nfe + body-only NLP ==========\n');
-success = SearchTrajViaHybridAstar();
-if ~success
-    error('Scheme2 Hybrid A* failed: %s', params.ha.fail_reason);
-end
-
-%% ===== add velocity and choose point =====
-
-target_nfe = ReadMatchedNfe(task_id, experiment_root);      %从scheme1中读取Nfe
-[x, y, theta, v, a, phy, w, time] = Scheme2ConvertPathToTraj(target_nfe);
-fprintf('Scheme2 final Nfe count: %d\n', target_nfe);
-Scheme2_WriteInitialGuess(x, y, theta, v, a, phy, w, time(1:end-1));
+%% ==== Load the exact Scheme1 shared initial guess =====
+fprintf('\n========== Scheme2: shared Scheme1 initialization + body-only NLP ==========\n');
+[x, y, theta, v, a, phy, w, dt, shared_file] = ...
+    LoadScheme1SharedInitialGuess(experiment_root, task_id);
+fprintf('Scheme2 shared Nfe count: %d\n', numel(x));
+Scheme2_WriteInitialGuess(x, y, theta, v, a, phy, w, dt);
+AssertSharedInitialGuessConsistency( ...
+    shared_file, ...
+    fullfile(scheme_dir, 'written_initial_guess_data_scheme2.mat'), ...
+    1e-9);
 %VisualizeEmbodimentFilteredTraj(x, y);
 Scheme2_ArchiveRunFiles(scheme_dir, task_id, 'initial');
 

@@ -1,4 +1,5 @@
 function [x, y, theta, v, a, phy, w, time] = Scheme2ConvertPathToTraj(target_nfe)
+% LEGACY: Scheme2 now loads Scheme1's exact shared initial guess directly.
 % ============================================================
 % Scheme2ConvertPathToTraj
 %

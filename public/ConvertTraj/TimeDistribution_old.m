@@ -1,4 +1,5 @@
 function [x1, y1, theta1, v, acc, phy, w, time] = TimeDistribution_old(x1, y1, theta1, v, acc, phy, w, terminal_time)
+% LEGACY: historical temporal-mesh implementation; not used by RunMe1/RunMe2.
 %TIMEDISTRIBUTION  基于 EF 可行性的轨迹降采样与时间分配
 %
 % 功能：

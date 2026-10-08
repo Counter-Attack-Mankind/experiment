@@ -1,4 +1,5 @@
 function WriteEFInitialGuessLSE(x, y, theta, v, a, phy, w, time)
+% LEGACY: retained for historical LSE experiments; not used by RunMe1/RunMe2.
 global params
 
 Nfe = params.nfe;

@@ -1,4 +1,5 @@
 function target_nfe = ReadMatchedNfe(task_id, experiment_root)
+% LEGACY: matched Nfe is now carried by the Scheme1 shared initial guess.
 
 config_file = fullfile(experiment_root,'Scheme1_GeoTime_MaxNLP', 'Nfe_config.txt');
 

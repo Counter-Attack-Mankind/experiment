@@ -1,4 +1,5 @@
 function VerifySmoothErrorBounds()
+% LEGACY DIAGNOSTIC: verifies bounds for the retired LSE approximation.
 % VerifySmoothErrorBounds
 % 验证 problem.txt 中 log-sum-exp / softplus 平滑外扩尺度误差界。
 %

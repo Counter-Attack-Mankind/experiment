@@ -195,7 +195,6 @@ fprintf(fid, 'let tf := %.12f;\r\n', sum(time));
 fclose(fid);
 
 params.ef.ig.time = time;
-params.task.thetaf = theta(end);
 
 %========================
 % 写 PV
@@ -308,6 +307,8 @@ data.DX = DX; data.DY = DY;
 
 data.meta = struct();
 data.meta.Nfe      = params.nfe;
+data.meta.task_id  = params.task_id;
+data.meta.task_source = strtrim(getenv('EXPERIMENT_TASK_SOURCE'));
 data.meta.x0       = params.task.x0;
 data.meta.y0       = params.task.y0;
 data.meta.theta0   = params.task.theta0;

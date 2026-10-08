@@ -12,16 +12,14 @@ function [x1, y1, theta1, v, acc, phy, w, time] = TimeDistribution(x1, y1, theta
 %          kappa_k = tan(phi_k) / Lw
 %          s_k     = v_k * Delta_t_k
 %
-%   5) 使用与 LSE 模型一致的平滑 splus / sminus；
+%   5) 使用与 exact-max NLP 一致的 splus / sminus；
 %   6) 使用 eta 收紧后的 EF validity conditions
 %      （论文 Eq. (28a)-(28e)）进行候选区间筛选；
 %   7) 当继续扩展 interval 首次违反 tightened validity conditions
 %      时，保留最后一个 admissible candidate；
 %   8) 障碍物碰撞不参与本函数的配置点选择。
 %
-% 注意：
-%   geometric feasibility enhancement 属于后续独立步骤，
-%   由 CheckInitialEFCollision / ShrinkWrittenInitialGuessEF 完成。
+% 注意：当前正式 Scheme1 流程不执行额外的几何 shrink。
 %
 % 输入：
 %   x1, y1, theta1  - 稠密参考轨迹
@@ -106,7 +104,7 @@ cur_idx = 1;
 %   kappa_k   = tan(phi_k) / Lw
 %   s_k       = v_k * Delta_t_k
 %
-% 然后使用 LSE-smoothed splus/sminus 检查 tightened validity
+% 然后使用 exact max splus/sminus 检查 tightened validity
 % conditions。
 %
 % 一旦继续扩大 interval 首次违反条件，就保留此前最后一个
@@ -330,10 +328,10 @@ s_k = v(cur_idx) * delta_t;
 abs_kappa = abs(kappa_k);
 
 % ------------------------------------------------------------------------
-% 3. 与正式 LSE 模型一致的 forward/reverse travel distance
+% 3. 与正式 exact-max 模型一致的 forward/reverse travel distance
 % ------------------------------------------------------------------------
-splus  = smoothPlus(s_k);
-sminus = smoothPlus(-s_k);
+splus  = max(s_k, 0);
+sminus = max(-s_k, 0);
 % ------------------------------------------------------------------------
 % 4. 论文 Eq. (28a)-(28e)
 %
@@ -378,43 +376,6 @@ end
 
 %% ========================================================================
 % Local Function 2
-% 稳定计算 LSE smooth max(0,x)
-% ========================================================================
-function val = smoothPlus(x)
-
-global params
-
-if isfield(params, 'nlp') && ...
-        isfield(params.nlp, 'alpha') && ...
-        ~isempty(params.nlp.alpha)
-
-    alpha = params.nlp.alpha;
-
-else
-    alpha = 60;
-end
-
-if ~isfinite(alpha) || alpha <= 0
-    error('TimeDistribution: LSE alpha must be positive.');
-end
-
-% stable:
-%
-% (1/alpha) log(exp(0) + exp(alpha*x))
-%
-% = max(0,x)
-% + log(exp(-alpha*m) + exp(alpha*(x-m))) / alpha
-
-m = max(0, x);
-
-val = m + ...
-    log(exp(-alpha * m) + exp(alpha * (x - m))) / alpha;
-
-end
-
-
-%% ========================================================================
-% Local Function 3
 % 校验最终 interval dt
 % ========================================================================
 function validateTimeBounds(interval_time, min_dt, max_dt)
@@ -443,7 +404,7 @@ end
 
 
 %% ========================================================================
-% Local Function 4
+% Local Function 3
 % 检测最终配置点中的前进/倒退切换
 % ========================================================================
 function chg_ef = detectDirectionSwitch(v)

@@ -1,4 +1,5 @@
 function [a, b, c, d] = EstimateAABBnew(s, k, sgn)
+% LEGACY: LSE footprint helper used only by TimeDistribution_old.
 % Estimate EF box dimensions with the same LSE smoothing as NLP1.mod.
 global params
 

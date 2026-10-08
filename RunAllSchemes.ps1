@@ -40,6 +40,7 @@ $standardTemporaryFiles = @(
     'written_initial_guess_data.mat'
 )
 $scheme2TemporaryFiles = @(
+    # Legacy Scheme2 artifacts are retained here so -Clear removes them.
     'Area_scheme2',
     'PPP_scheme2',
     'PV_scheme2',
@@ -120,8 +121,7 @@ function Clear-GeneratedArtifacts {
         }
     }
 
-    # Scheme1 generates this matched-Nfe input for Scheme2. Keeping it after
-    # -Clear could silently mix an old Scheme1 run with a new Scheme2 run.
+    # Remove the legacy matched-Nfe sidecar as part of a full cleanup.
     Remove-GeneratedFile -Path (
         Join-Path $experimentRoot 'Scheme1_GeoTime_MaxNLP\Nfe_config.txt')
 
@@ -322,26 +322,19 @@ function Set-FailedResult {
         $resultsFile, $lines, [System.Text.UTF8Encoding]::new($false))
 }
 
-function Assert-MatchedNfeExists {
+function Get-Scheme1SharedInitialGuessPath {
     param([Parameter(Mandatory = $true)][int]$TaskId)
 
-    $configFile = Join-Path $experimentRoot `
-        'Scheme1_GeoTime_MaxNLP\Nfe_config.txt'
-    if (-not (Test-Path -LiteralPath $configFile -PathType Leaf)) {
-        throw "Scheme2 task $TaskId requires Scheme1 matched Nfe, but Nfe_config.txt is missing. Run Scheme1 for this task first."
-    }
+    return Join-Path $experimentRoot (
+        'Scheme1_GeoTime_MaxNLP\Results\task_{0:D2}\InitialGuess\shared_initial_guess.mat' -f $TaskId)
+}
 
-    $matched = $false
-    foreach ($line in [System.IO.File]::ReadAllLines($configFile)) {
-        if ($line -match '^\s*(\d+)\s+(\d+)(?:\s|$)') {
-            if ([int]$Matches[1] -eq $TaskId -and [int]$Matches[2] -ge 2) {
-                $matched = $true
-                break
-            }
-        }
-    }
-    if (-not $matched) {
-        throw "Scheme2 task $TaskId has no valid matched Nfe in $configFile. Run Scheme1 for this task first."
+function Assert-Scheme1SharedInitialGuessExists {
+    param([Parameter(Mandatory = $true)][int]$TaskId)
+
+    $sharedFile = Get-Scheme1SharedInitialGuessPath -TaskId $TaskId
+    if (-not (Test-Path -LiteralPath $sharedFile -PathType Leaf)) {
+        throw "Scheme2 task $TaskId requires the Scheme1 shared initial guess. Run Scheme1 for this task first: $sharedFile"
     }
 }
 
@@ -401,20 +394,55 @@ try {
                 -SchemeIndex $scheme.Index -TaskId $taskId
 
             if ($Resume -and $null -ne $recordedSuccess) {
-                Write-Host "Skipping $($scheme.Name)/task_$('{0:D2}' -f $taskId): success=$recordedSuccess is already recorded."
-                continue
+                $canSkip = $true
+                if ($scheme.Index -eq 1) {
+                    $sharedFile = Get-Scheme1SharedInitialGuessPath -TaskId $taskId
+                    $canSkip = Test-Path -LiteralPath $sharedFile -PathType Leaf
+                }
+                if ($canSkip) {
+                    Write-Host "Skipping $($scheme.Name)/task_$('{0:D2}' -f $taskId): success=$recordedSuccess is already recorded."
+                    continue
+                }
+                Write-Host "Re-running $($scheme.Name)/task_$('{0:D2}' -f $taskId) because its shared initial guess is missing."
             }
             if ($RetryFailed -and $recordedSuccess -ne 0) {
-                $shownStatus = 'NaN'
-                if ($null -ne $recordedSuccess) {
-                    $shownStatus = [string]$recordedSuccess
+                $missingRequiredSharedFile = $false
+                if ($scheme.Index -eq 1) {
+                    $sharedFile = Get-Scheme1SharedInitialGuessPath -TaskId $taskId
+                    $missingRequiredSharedFile = -not (
+                        Test-Path -LiteralPath $sharedFile -PathType Leaf)
                 }
-                Write-Host "Skipping $($scheme.Name)/task_$('{0:D2}' -f $taskId): success=$shownStatus is not 0."
-                continue
+                if ($missingRequiredSharedFile) {
+                    Write-Host "Re-running $($scheme.Name)/task_$('{0:D2}' -f $taskId) because its shared initial guess is missing."
+                } else {
+                    $shownStatus = 'NaN'
+                    if ($null -ne $recordedSuccess) {
+                        $shownStatus = [string]$recordedSuccess
+                    }
+                    Write-Host "Skipping $($scheme.Name)/task_$('{0:D2}' -f $taskId): success=$shownStatus is not 0."
+                    continue
+                }
             }
 
+            # Clear every old metric before attempting the run. If a
+            # precondition, MATLAB startup, or evaluation fails, stale values
+            # cannot survive in results.csv.
+            Set-FailedResult -SchemeIndex $scheme.Index -TaskId $taskId
+
             if ($scheme.Index -eq 2) {
-                Assert-MatchedNfeExists -TaskId $taskId
+                try {
+                    Assert-Scheme1SharedInitialGuessExists -TaskId $taskId
+                } catch {
+                    $runName = "$($scheme.Name):task_$('{0:D2}' -f $taskId)"
+                    $failures.Add($runName)
+                    Write-Warning $_.Exception.Message
+                    continue
+                }
+            } else {
+                # A failed Scheme1 rerun must not leave an older shared warm
+                # start available for Scheme2.
+                Remove-GeneratedFile -Path (
+                    Get-Scheme1SharedInitialGuessPath -TaskId $taskId)
             }
 
             # Each scheme reuses one runtime directory. Reset only scratch

@@ -1,4 +1,5 @@
 function AnalyzeSmoothCoefficientFull(mat_file)
+% LEGACY DIAGNOSTIC: retained only for analysis of the retired LSE model.
 % AnalyzeSmoothCoefficientFull - 综合分析 log-sum-exp 光滑系数 alpha
 %
 % 输入:

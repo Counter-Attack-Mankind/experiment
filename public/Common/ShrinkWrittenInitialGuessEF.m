@@ -1,4 +1,5 @@
 function ShrinkWrittenInitialGuessEF(matfile)
+% LEGACY: geometric shrink is not used by the current Scheme1/2 workflow.
 %SHRINKWRITTENINITIALGUESSEF Repair the EF warm start against OBCA distance.
 % Only the four interval buffer dimensions are reduced. Vehicle states,
 % controls, and the time grid are not changed.

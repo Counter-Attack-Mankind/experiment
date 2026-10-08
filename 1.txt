@@ -8,3 +8,22 @@
 Scheme2_body_only_baseline文件夹下的都要修复好。
 
 4.修改的总文件夹是D:\desktop\experiment
+
+
+1.TimeDistribution 读取 params.ef.dense_change_idx，但全库没有写入该字段，换向点并未被强制保留。目前是否会实质性对我的scheme1,scheme2，
+   求解或者流程造成潜在影响？
+2.目前scheme1和scheme2是消融对照实验，所以应该审查，例如我检查出Scheme2的min_length = 2。我认为这是当前仓库里明显的 Scheme1/Scheme2 不一致；若无特殊意图应统一到0.05。
+   并检查两个方案除此之外是否还有明显不一致的地方？
+3.scheme1已经是最纯粹的max，所以其中不要用任何的LSE平滑，若有LSE平滑应该改为max，同时abs也不要平滑，请审查
+目前先系统性审查/experiment，包括但不限于我上面三点内容，并且给我审查报告
+
+1. 检查 ConvertPathToTraj.m，将稠密轨迹换向索引 chg 写入 params.ef.dense_change_idx。
+2. 修改 TimeDistribution.m，将 softplus 替换为精确 max，移除正式流程的 LSE 依赖。
+3. 检查 RunMe1.m，移除 ShrinkWrittenInitialGuessEF 调用，不执行几何增强。
+4. 修改 Scheme1，保存 NLP 求解前的 x/y/theta/v/a/phy/w/dt 及任务标识，供 Scheme2 读取。
+5. 修改 RunMe2.m，直接读取 Scheme1 共享初值，取消独立轨迹生成和等时间重采样。
+6. 统一 Scheme1/Scheme2 的 a/w 计算、限幅和端点处理，保证共享变量初值一致。
+7. 修改 Scheme2 初值写入器，仅重新构造真实车身顶点及自身 OBCA 对偶初值。
+8. 修改 RunAllSchemes.ps1，确保 Scheme1 先生成初值，Scheme2 后读取；失败时清除旧指标。
+9. 标记未使用的 LSE 和旧转换函数为 legacy，列出，后续我来删除。
+10. 增加初值一致性检查，比较两方案全部共享变量，最大误差不得超过 1e-9。

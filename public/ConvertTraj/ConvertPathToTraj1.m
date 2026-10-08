@@ -1,4 +1,5 @@
 function [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj()
+% LEGACY: historical converter; current runs use ConvertPathToTraj.m.
 % ============================================================
 % ConvertPathToTraj
 % 作用：

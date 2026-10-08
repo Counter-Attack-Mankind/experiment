@@ -1,4 +1,5 @@
 function UpdateNfeConfig(task_id, nfe)
+% LEGACY: Scheme2 now reads Scheme1's complete shared initial guess.
 %UPDATENFECONFIG Update the task_id -> Nfe mapping used by Scheme2.
 
 scheme_dir = fileparts(mfilename('fullpath'));

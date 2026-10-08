@@ -1,4 +1,5 @@
 function compareFootprintSmooth()
+% LEGACY DIAGNOSTIC: compares the retired LSE footprint with exact max.
 %% =======================
 % 车辆参数
 global params

@@ -58,13 +58,13 @@ end
 
 %% ==== Add velocity and configuration-point selection ====
 [x, y, theta, v, a, phy, w, time] = ConvertPathToTraj();
-UpdateNfeConfig(task_id, numel(x));
 %VisualizeEmbodimentFilteredTraj(x, y);
 
 
 %% ==== Initial guess write and check ====
 WriteEFInitialGuessMax(x, y, theta, v, a, phy, w, time(1:end-1));
-ShrinkWrittenInitialGuessEF('written_initial_guess_data.mat');
+SaveScheme1SharedInitialGuess( ...
+    scheme_dir, task_id, fullfile(scheme_dir, 'written_initial_guess_data.mat'));
 %VisualizeInitialEFCollision('written_initial_guess_data.mat');
 ArchiveStrategyRunFiles(scheme_dir, task_id, 'initial');
 
